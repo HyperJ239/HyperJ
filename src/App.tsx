@@ -279,7 +279,7 @@ function App() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(217,70,239,0.14),transparent_24%),radial-gradient(circle_at_bottom_center,rgba(236,72,153,0.12),transparent_28%)]" />
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row">
         <Sidebar page={page} onChange={setPage} lowStockCount={lowStockItems.length} />
-        <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:py-8">
           <Header page={page} />
           {page === 'dashboard' && (
             <Dashboard stats={stats} projects={projects} lowStockItems={lowStockItems} />
@@ -336,12 +336,13 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
   ]
 
   return (
+    <>
     <aside className="border-b border-white/10 bg-white/[0.03] p-4 backdrop-blur lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
       <div className="mb-5">
         <p className="text-xs uppercase tracking-[0.35em] text-teal-300">Hyper J Ruggs</p>
         <h1 className="mt-2 text-2xl font-semibold text-white">Tracker</h1>
       </div>
-      <nav className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+      <nav className="hidden grid-cols-2 gap-2 sm:grid lg:grid-cols-1">
         {links.map((link) => (
           <button
             key={link.id}
@@ -361,6 +362,22 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
         <p className="mt-2 text-3xl font-semibold text-pink-300">{lowStockCount}</p>
       </div>
     </aside>
+    <nav className="fixed inset-x-3 bottom-3 z-40 grid grid-cols-6 gap-1 rounded-[1.5rem] border border-white/10 bg-[#0d1020]/95 p-2 shadow-2xl shadow-black/40 backdrop-blur sm:hidden">
+      {links.map((link) => (
+        <button
+          key={link.id}
+          onClick={() => onChange(link.id)}
+          className={`rounded-2xl px-2 py-3 text-[11px] transition ${
+            page === link.id
+              ? 'bg-white text-slate-950 shadow-[0_0_20px_rgba(45,212,191,0.28)]'
+              : 'text-slate-300'
+          }`}
+        >
+          {link.label}
+        </button>
+      ))}
+    </nav>
+    </>
   )
 }
 
@@ -556,8 +573,8 @@ function ProjectsPage({
           </button>
         </div>
       </div>
-      <div className="flex justify-end">
-        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-2 font-medium text-slate-950 transition hover:bg-teal-200">
+      <div className="sticky top-3 z-20 flex justify-end sm:static">
+        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 shadow-[0_0_24px_rgba(45,212,191,0.2)] transition hover:bg-teal-200">
           Add Project
         </button>
       </div>
@@ -607,7 +624,7 @@ function ProjectsPage({
                     <button
                       type="button"
                       onClick={() => onOpenProject(project.id)}
-                      className="rounded-full bg-teal-400/15 px-3 py-1 text-sm text-teal-100 hover:bg-teal-400/25"
+                      className="rounded-full bg-teal-400/15 px-4 py-2 text-sm text-teal-100 hover:bg-teal-400/25"
                     >
                       View
                     </button>
@@ -642,6 +659,7 @@ function ProjectsPage({
           <ModalActions onCancel={closeModal} />
         </form>
       </Modal>
+      <FloatingActionButton label="Add project" onClick={openCreateModal} />
     </div>
   )
 }
@@ -768,8 +786,8 @@ function InventoryPage({
           Quantity {quantitySort === 'asc' ? '↑' : '↓'}
         </button>
       </div>
-      <div className="flex justify-end">
-        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-2 font-medium text-slate-950 transition hover:bg-teal-200">
+      <div className="sticky top-3 z-20 flex justify-end sm:static">
+        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 shadow-[0_0_24px_rgba(45,212,191,0.2)] transition hover:bg-teal-200">
           Add Inventory Item
         </button>
       </div>
@@ -814,6 +832,7 @@ function InventoryPage({
           <ModalActions onCancel={closeModal} />
         </form>
       </Modal>
+      <FloatingActionButton label="Add inventory item" onClick={openCreateModal} />
     </div>
   )
 }
@@ -900,7 +919,7 @@ function CustomersPage({
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
         />
-        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-2 font-medium text-slate-950 transition hover:bg-teal-200">
+        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 shadow-[0_0_24px_rgba(45,212,191,0.2)] transition hover:bg-teal-200">
           Add Customer
         </button>
       </div>
@@ -958,6 +977,7 @@ function CustomersPage({
           <ModalActions onCancel={closeModal} />
         </form>
       </Modal>
+      <FloatingActionButton label="Add customer" onClick={openCreateModal} />
     </div>
   )
 }
@@ -1044,7 +1064,7 @@ function ExpensesPage({
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
         />
-        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-2 font-medium text-slate-950 transition hover:bg-teal-200">
+        <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 shadow-[0_0_24px_rgba(45,212,191,0.2)] transition hover:bg-teal-200">
           Add Expense
         </button>
       </div>
@@ -1113,6 +1133,7 @@ function ExpensesPage({
           <ModalActions onCancel={closeModal} />
         </form>
       </Modal>
+      <FloatingActionButton label="Add expense" onClick={openCreateModal} />
     </div>
   )
 }
@@ -1529,6 +1550,19 @@ function ModalActions({ onCancel }: { onCancel: () => void }) {
   )
 }
 
+function FloatingActionButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-teal-300 text-3xl font-light text-slate-950 shadow-[0_0_28px_rgba(45,212,191,0.35)] transition hover:bg-teal-200 sm:hidden"
+    >
+      +
+    </button>
+  )
+}
+
 function RowActions({
   onEdit,
   onDelete,
@@ -1539,10 +1573,10 @@ function RowActions({
   extraAction?: ReactNode
 }) {
   return (
-    <div className="mt-4 flex gap-2">
+    <div className="mt-4 flex flex-wrap gap-2">
       {extraAction}
-      <button onClick={onEdit} className="rounded-full bg-purple-400/15 px-3 py-1 text-sm text-purple-100 hover:bg-purple-400/25">Edit</button>
-      <button onClick={onDelete} className="rounded-full bg-pink-400/15 px-3 py-1 text-sm text-pink-100 hover:bg-pink-400/25">Delete</button>
+      <button onClick={onEdit} className="rounded-full bg-purple-400/15 px-4 py-2 text-sm text-purple-100 hover:bg-purple-400/25">Edit</button>
+      <button onClick={onDelete} className="rounded-full bg-pink-400/15 px-4 py-2 text-sm text-pink-100 hover:bg-pink-400/25">Delete</button>
     </div>
   )
 }
