@@ -13,12 +13,16 @@ type Project = {
   depositPaid: number
   dueDate: string
   notes: string
+  photos: string[]
 }
 
 type InventoryItem = {
   id: string
   yarnColor: string
   brand: string
+  colorCode: string
+  colorFamily: ColorFamily
+  hexColor: string
   quantity: number
   lowStockThreshold: number
   cost: number
@@ -48,7 +52,29 @@ type Expense = {
   notes: string
 }
 
-type Page = 'dashboard' | 'projects' | 'inventory' | 'customers' | 'expenses' | 'settings'
+type ColorFamily = 'Red' | 'Orange' | 'Yellow' | 'Green' | 'Blue' | 'Purple' | 'Pink' | 'Brown' | 'Black' | 'White' | 'Gray' | 'Neon' | 'Multi'
+
+type YarnColor = {
+  id: string
+  name: string
+  sku: string
+  family: ColorFamily
+  hexColor: string
+  photo: string
+  inStockQuantity: number
+  notes: string
+}
+
+type YarnBrand = {
+  id: string
+  name: string
+  source: string
+  website: string
+  notes: string
+  colors: YarnColor[]
+}
+
+type Page = 'dashboard' | 'projects' | 'inventory' | 'customers' | 'expenses' | 'yarnLibrary' | 'settings'
 
 type ProjectFormState = Omit<Project, 'id'>
 type InventoryFormState = Omit<InventoryItem, 'id'>
@@ -58,18 +84,20 @@ type Accent = 'teal' | 'purple' | 'pink'
 
 const projectStatuses: ProjectStatus[] = ['Quote', 'Approved', 'Tufting', 'Gluing', 'Finished', 'Picked Up']
 const expenseCategories: ExpenseCategory[] = ['Yarn', 'Glue', 'Backing', 'Tools', 'Shipping', 'Booth/Event Fee', 'Other']
+const colorFamilies: ColorFamily[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Black', 'White', 'Gray', 'Neon', 'Multi']
+const starterYarnBrandNames = ['I Love This Yarn', 'Red Heart Super Saver', 'Caron One Pound', 'Loops & Threads', 'Big Twist', 'Mainstays', 'Lion Brand', 'Premier Yarns', 'Bernat']
 
 const sampleProjects: Project[] = [
-  { id: 'p1', name: 'Galaxy Logo Rug', customer: 'Maya Chen', size: '3 ft x 4 ft', status: 'Tufting', price: 420, depositPaid: 150, dueDate: '2026-05-24', notes: 'Match brand colors closely.' },
-  { id: 'p2', name: 'Barbershop Entry Rug', customer: 'Jalen Brooks', size: '4 ft x 6 ft', status: 'Approved', price: 560, depositPaid: 280, dueDate: '2026-05-30', notes: 'Durable backing for storefront traffic.' },
-  { id: 'p3', name: 'Pink Flame Rug', customer: 'Sasha Lee', size: '2 ft x 3 ft', status: 'Finished', price: 310, depositPaid: 310, dueDate: '2026-05-18', notes: 'Ready for pickup.' },
+  { id: 'p1', name: 'Galaxy Logo Rug', customer: 'Maya Chen', size: '3 ft x 4 ft', status: 'Tufting', price: 420, depositPaid: 150, dueDate: '2026-05-24', notes: 'Match brand colors closely.', photos: [] },
+  { id: 'p2', name: 'Barbershop Entry Rug', customer: 'Jalen Brooks', size: '4 ft x 6 ft', status: 'Approved', price: 560, depositPaid: 280, dueDate: '2026-05-30', notes: 'Durable backing for storefront traffic.', photos: [] },
+  { id: 'p3', name: 'Pink Flame Rug', customer: 'Sasha Lee', size: '2 ft x 3 ft', status: 'Finished', price: 310, depositPaid: 310, dueDate: '2026-05-18', notes: 'Ready for pickup.', photos: [] },
 ]
 
 const sampleInventory: InventoryItem[] = [
-  { id: 'i1', yarnColor: 'Black', brand: 'TuftingCo', quantity: 8, lowStockThreshold: 6, cost: 14, supplier: 'Rug Supply Hub', notes: 'Primary outline color.' },
-  { id: 'i2', yarnColor: 'Teal', brand: 'TuftingCo', quantity: 4, lowStockThreshold: 6, cost: 15, supplier: 'Rug Supply Hub', notes: 'Signature accent color.' },
-  { id: 'i3', yarnColor: 'Hot Pink', brand: 'WoolWorks', quantity: 10, lowStockThreshold: 5, cost: 16, supplier: 'Color Loom', notes: 'Used for flame designs.' },
-  { id: 'i4', yarnColor: 'Purple', brand: 'WoolWorks', quantity: 3, lowStockThreshold: 4, cost: 16, supplier: 'Color Loom', notes: 'Reorder soon.' },
+  { id: 'i1', yarnColor: 'Black', brand: 'I Love This Yarn', colorCode: '', colorFamily: 'Black', hexColor: '#111111', quantity: 8, lowStockThreshold: 6, cost: 14, supplier: 'Rug Supply Hub', notes: 'Primary outline color.' },
+  { id: 'i2', yarnColor: 'Teal', brand: 'Red Heart Super Saver', colorCode: '', colorFamily: 'Blue', hexColor: '#14b8a6', quantity: 4, lowStockThreshold: 6, cost: 15, supplier: 'Rug Supply Hub', notes: 'Signature accent color.' },
+  { id: 'i3', yarnColor: 'Hot Pink', brand: 'Caron One Pound', colorCode: '', colorFamily: 'Pink', hexColor: '#ec4899', quantity: 10, lowStockThreshold: 5, cost: 16, supplier: 'Color Loom', notes: 'Used for flame designs.' },
+  { id: 'i4', yarnColor: 'Purple', brand: 'Lion Brand', colorCode: '', colorFamily: 'Purple', hexColor: '#a855f7', quantity: 3, lowStockThreshold: 4, cost: 16, supplier: 'Color Loom', notes: 'Reorder soon.' },
 ]
 
 const sampleCustomers: Customer[] = [
@@ -84,6 +112,32 @@ const sampleExpenses: Expense[] = [
   { id: 'e3', itemName: 'Spring maker booth', category: 'Booth/Event Fee', cost: 120, date: '2026-05-12', supplier: 'Downtown Market', notes: 'Weekend vendor fee' },
 ]
 
+const sampleYarnBrands: YarnBrand[] = [
+  {
+    id: 'yb1',
+    name: 'I Love This Yarn',
+    source: '',
+    website: '',
+    notes: '',
+    colors: [],
+  },
+  {
+    id: 'yb2',
+    name: 'Red Heart Super Saver',
+    source: '',
+    website: '',
+    notes: '',
+    colors: [],
+  },
+  { id: 'yb3', name: 'Caron One Pound', source: '', website: '', notes: '', colors: [] },
+  { id: 'yb4', name: 'Loops & Threads', source: '', website: '', notes: '', colors: [] },
+  { id: 'yb5', name: 'Big Twist', source: '', website: '', notes: '', colors: [] },
+  { id: 'yb6', name: 'Mainstays', source: '', website: '', notes: '', colors: [] },
+  { id: 'yb7', name: 'Lion Brand', source: '', website: '', notes: '', colors: [] },
+  { id: 'yb8', name: 'Premier Yarns', source: '', website: '', notes: '', colors: [] },
+  { id: 'yb9', name: 'Bernat', source: '', website: '', notes: '', colors: [] },
+]
+
 const defaultProjectForm: ProjectFormState = {
   name: '',
   customer: '',
@@ -93,11 +147,15 @@ const defaultProjectForm: ProjectFormState = {
   depositPaid: 0,
   dueDate: '',
   notes: '',
+  photos: [],
 }
 
 const defaultInventoryForm: InventoryFormState = {
   yarnColor: '',
   brand: '',
+  colorCode: '',
+  colorFamily: 'Multi',
+  hexColor: '#ffffff',
   quantity: 0,
   lowStockThreshold: 0,
   cost: 0,
@@ -149,6 +207,7 @@ function normalizeProjects(projects: Project[]) {
       size?: string
       depositPaid?: number
       notes?: string
+      photos?: string[]
     }
 
     return {
@@ -156,6 +215,7 @@ function normalizeProjects(projects: Project[]) {
       size: legacyProject.size ?? '',
       depositPaid: legacyProject.depositPaid ?? 0,
       notes: legacyProject.notes ?? '',
+      photos: legacyProject.photos ?? [],
     }
   })
 }
@@ -166,6 +226,9 @@ function normalizeInventory(items: InventoryItem[]) {
     return {
       yarnColor: legacyItem.yarnColor ?? legacyItem.name ?? '',
       brand: legacyItem.brand ?? '',
+      colorCode: legacyItem.colorCode ?? '',
+      colorFamily: legacyItem.colorFamily ?? 'Multi',
+      hexColor: legacyItem.hexColor ?? '#ffffff',
       quantity: legacyItem.quantity ?? 0,
       lowStockThreshold: legacyItem.lowStockThreshold ?? 0,
       cost: legacyItem.cost ?? 0,
@@ -174,6 +237,30 @@ function normalizeInventory(items: InventoryItem[]) {
       id: legacyItem.id,
     }
   })
+}
+
+function normalizeYarnBrands(brands: YarnBrand[]) {
+  const normalized = brands.map((brand) => ({
+    ...brand,
+    colors: brand.colors.map((color) => ({
+      ...color,
+      photo: color.photo ?? '',
+      notes: color.notes ?? '',
+    })),
+  }))
+
+  const missingBrands = starterYarnBrandNames
+    .filter((name) => !normalized.some((brand) => brand.name === name))
+    .map((name) => ({
+      id: crypto.randomUUID(),
+      name,
+      source: '',
+      website: '',
+      notes: '',
+      colors: [],
+    }))
+
+  return [...normalized, ...missingBrands]
 }
 
 function normalizeCustomers(customers: Customer[]) {
@@ -213,30 +300,43 @@ function App() {
   const [inventory, setInventory] = useStoredState<InventoryItem[]>('hyper-j-inventory', sampleInventory, normalizeInventory)
   const [customers, setCustomers] = useStoredState<Customer[]>('hyper-j-customers', sampleCustomers, normalizeCustomers)
   const [expenses, setExpenses] = useStoredState<Expense[]>('hyper-j-expenses', sampleExpenses, normalizeExpenses)
+  const [yarnBrands, setYarnBrands] = useStoredState<YarnBrand[]>('hyper-j-yarn-brands', sampleYarnBrands, normalizeYarnBrands)
+  const [toast, setToast] = useState('')
+
+  function notify(message: string) {
+    setToast(message)
+    window.setTimeout(() => setToast(''), 2200)
+  }
 
   function createProject(project: ProjectFormState) {
     setProjects((current) => [{ id: crypto.randomUUID(), ...project }, ...current])
+    notify('Project saved.')
   }
 
   function updateProject(id: string, project: ProjectFormState) {
     setProjects((current) => current.map((item) => (item.id === id ? { ...item, ...project } : item)))
+    notify('Project updated.')
   }
 
   function deleteProject(id: string) {
     setProjects((current) => current.filter((item) => item.id !== id))
     setSelectedProjectId((current) => (current === id ? null : current))
+    notify('Project deleted.')
   }
 
   function createInventoryItem(item: InventoryFormState) {
     setInventory((current) => [{ id: crypto.randomUUID(), ...item }, ...current])
+    notify('Inventory item saved.')
   }
 
   function updateInventoryItem(id: string, item: InventoryFormState) {
     setInventory((current) => current.map((entry) => (entry.id === id ? { ...entry, ...item } : entry)))
+    notify('Inventory item updated.')
   }
 
   function deleteInventoryItem(id: string) {
     setInventory((current) => current.filter((entry) => entry.id !== id))
+    notify('Inventory item deleted.')
   }
 
   function replaceAllData(data: {
@@ -303,13 +403,15 @@ function App() {
           {page === 'inventory' && (
             <InventoryPage
               inventory={inventory}
+              yarnBrands={yarnBrands}
               onCreate={createInventoryItem}
               onUpdate={updateInventoryItem}
               onDelete={deleteInventoryItem}
             />
           )}
-          {page === 'customers' && <CustomersPage customers={customers} projects={projects} setCustomers={setCustomers} />}
-          {page === 'expenses' && <ExpensesPage expenses={expenses} setExpenses={setExpenses} />}
+          {page === 'customers' && <CustomersPage customers={customers} projects={projects} setCustomers={setCustomers} onNotify={notify} />}
+          {page === 'expenses' && <ExpensesPage expenses={expenses} setExpenses={setExpenses} onNotify={notify} />}
+          {page === 'yarnLibrary' && <YarnLibraryPage brands={yarnBrands} setBrands={setYarnBrands} onNotify={notify} />}
           {page === 'settings' && (
             <SettingsPage
               projects={projects}
@@ -321,6 +423,7 @@ function App() {
           )}
         </main>
       </div>
+      {toast && <Toast message={toast} />}
     </div>
   )
 }
@@ -332,6 +435,7 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
     { id: 'inventory', label: 'Inventory' },
     { id: 'customers', label: 'Customers' },
     { id: 'expenses', label: 'Expenses' },
+    { id: 'yarnLibrary', label: 'Yarn Library' },
     { id: 'settings', label: 'Settings' },
   ]
 
@@ -339,8 +443,8 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
     <>
     <aside className="border-b border-white/10 bg-white/[0.03] p-4 backdrop-blur lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
       <div className="mb-5">
-        <p className="text-xs uppercase tracking-[0.35em] text-teal-300">Hyper J Ruggs</p>
-        <h1 className="mt-2 text-2xl font-semibold text-white">Tracker</h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-teal-300">powered by Hyper J Ruggs</p>
+        <h1 className="mt-2 text-2xl font-semibold text-white">TuftTrack</h1>
       </div>
       <nav className="hidden grid-cols-2 gap-2 sm:grid lg:grid-cols-1">
         {links.map((link) => (
@@ -388,12 +492,13 @@ function Header({ page }: { page: Page }) {
     inventory: 'Inventory',
     customers: 'Customers',
     expenses: 'Expenses',
+    yarnLibrary: 'Yarn Library',
     settings: 'Settings',
   }
 
   return (
     <header className="mb-6 flex flex-col gap-2">
-      <p className="text-sm text-slate-400">Hyper J Ruggs Tracker</p>
+      <p className="text-sm text-slate-400">powered by Hyper J Ruggs</p>
       <h2 className="text-3xl font-semibold tracking-tight text-white">{titles[page]}</h2>
     </header>
   )
@@ -409,9 +514,9 @@ function Dashboard({ stats, projects, lowStockItems }: { stats: { label: string;
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className={`rounded-3xl border p-5 shadow-2xl shadow-black/20 ${accentStyles[stat.accent]}`}>
+          <div key={stat.label} className={`rounded-3xl border p-4 shadow-2xl shadow-black/20 sm:p-5 ${accentStyles[stat.accent]}`}>
             <p className="text-sm text-slate-400">{stat.label}</p>
             <p className="mt-3 text-3xl font-semibold text-white">{stat.value}</p>
           </div>
@@ -588,7 +693,7 @@ function ProjectsPage({
             filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`rounded-2xl border p-4 ${
+                className={`rounded-3xl border p-4 shadow-xl shadow-black/10 sm:p-5 ${
                   isOverdue(project)
                     ? 'border-pink-400/40 bg-pink-400/10 shadow-[0_0_28px_rgba(244,114,182,0.12)]'
                     : 'border-white/10 bg-white/[0.03]'
@@ -617,9 +722,36 @@ function ProjectsPage({
                   </div>
                   <StatusPill status={project.status} />
                 </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {projectStatuses.map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => onUpdate(project.id, {
+                        name: project.name,
+                        customer: project.customer,
+                        size: project.size,
+                        status,
+                        price: project.price,
+                        depositPaid: project.depositPaid,
+                        dueDate: project.dueDate,
+                        notes: project.notes,
+                        photos: project.photos,
+                      })}
+                      className={`rounded-full px-3 py-2 text-xs transition ${
+                        project.status === status
+                          ? 'bg-white text-slate-950'
+                          : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
                 <RowActions
                   onEdit={() => edit(project)}
                   onDelete={() => onDelete(project.id)}
+                  confirmMessage={`Delete ${project.name}?`}
                   extraAction={
                     <button
                       type="button"
@@ -666,11 +798,13 @@ function ProjectsPage({
 
 function InventoryPage({
   inventory,
+  yarnBrands,
   onCreate,
   onUpdate,
   onDelete,
 }: {
   inventory: InventoryItem[]
+  yarnBrands: YarnBrand[]
   onCreate: (item: InventoryFormState) => void
   onUpdate: (id: string, item: InventoryFormState) => void
   onDelete: (id: string) => void
@@ -682,6 +816,8 @@ function InventoryPage({
   const [searchTerm, setSearchTerm] = useState('')
   const [lowStockOnly, setLowStockOnly] = useState(false)
   const [quantitySort, setQuantitySort] = useState<'asc' | 'desc'>('asc')
+  const [selectedLibraryBrandId, setSelectedLibraryBrandId] = useState('')
+  const [selectedLibraryColorId, setSelectedLibraryColorId] = useState('')
 
   const lowStockItems = inventory.filter((item) => item.quantity <= item.lowStockThreshold)
   const visibleInventory = inventory
@@ -723,6 +859,10 @@ function InventoryPage({
     setForm(nextForm)
     setEditingId(item.id)
     setError('')
+    const matchedBrand = yarnBrands.find((brand) => brand.name === item.brand)
+    const matchedColor = matchedBrand?.colors.find((color) => color.name === item.yarnColor)
+    setSelectedLibraryBrandId(matchedBrand?.id ?? 'custom')
+    setSelectedLibraryColorId(matchedColor?.id ?? 'custom')
     setIsModalOpen(true)
   }
 
@@ -730,6 +870,8 @@ function InventoryPage({
     setForm(defaultInventoryForm)
     setEditingId(null)
     setError('')
+    setSelectedLibraryBrandId('')
+    setSelectedLibraryColorId('')
     setIsModalOpen(true)
   }
 
@@ -737,7 +879,40 @@ function InventoryPage({
     setForm(defaultInventoryForm)
     setEditingId(null)
     setError('')
+    setSelectedLibraryBrandId('')
+    setSelectedLibraryColorId('')
     setIsModalOpen(false)
+  }
+
+  const selectedLibraryBrand = yarnBrands.find((brand) => brand.id === selectedLibraryBrandId)
+
+  function applyLibraryColor(colorId: string) {
+    setSelectedLibraryColorId(colorId)
+    if (colorId === 'custom') return
+    const color = selectedLibraryBrand?.colors.find((entry) => entry.id === colorId)
+    if (!selectedLibraryBrand || !color) return
+    setForm((current) => ({
+      ...current,
+      brand: selectedLibraryBrand.name,
+      yarnColor: color.name,
+      colorCode: color.sku,
+      colorFamily: color.family,
+      hexColor: color.hexColor,
+    }))
+  }
+
+  function chooseLibraryBrand(brandId: string) {
+    setSelectedLibraryBrandId(brandId)
+    setSelectedLibraryColorId('')
+    if (brandId === 'custom') {
+      setForm((current) => ({ ...current, brand: '', yarnColor: '', colorCode: '', colorFamily: 'Multi', hexColor: '#ffffff' }))
+      return
+    }
+
+    const brand = yarnBrands.find((entry) => entry.id === brandId)
+    if (brand) {
+      setForm((current) => ({ ...current, brand: brand.name, yarnColor: '', colorCode: '', colorFamily: 'Multi', hexColor: '#ffffff' }))
+    }
   }
 
   return (
@@ -805,11 +980,15 @@ function InventoryPage({
                   <div>
                     <p className="font-medium text-white">{item.yarnColor}</p>
                     <p className="text-sm text-slate-400">{item.brand} · {item.quantity} cones · alert at {item.lowStockThreshold}</p>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+                      <span className="h-4 w-4 rounded-full border border-white/20" style={{ backgroundColor: item.hexColor }} />
+                      <span>{item.colorFamily}{item.colorCode ? ` · ${item.colorCode}` : ''}</span>
+                    </div>
                     <p className="mt-1 text-xs text-slate-500">{item.supplier} · {currency(item.cost)} each</p>
                   </div>
                   {low && <span className="rounded-full bg-pink-400/20 px-3 py-1 text-xs text-pink-100">Low stock</span>}
                 </div>
-                <RowActions onEdit={() => edit(item)} onDelete={() => onDelete(item.id)} />
+                <RowActions onEdit={() => edit(item)} onDelete={() => onDelete(item.id)} confirmMessage={`Delete ${item.yarnColor}?`} />
               </div>
             )
           })}
@@ -818,9 +997,44 @@ function InventoryPage({
       <Modal title={editingId ? 'Edit Inventory Item' : 'Add Inventory Item'} open={isModalOpen} onClose={closeModal}>
         <form className="space-y-4" onSubmit={submit}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Yarn color"><input value={form.yarnColor} onChange={(event) => setForm({ ...form, yarnColor: event.target.value })} /></Field>
-            <Field label="Brand"><input value={form.brand} onChange={(event) => setForm({ ...form, brand: event.target.value })} /></Field>
+            <Field label="Yarn brand">
+              <select value={selectedLibraryBrandId} onChange={(event) => chooseLibraryBrand(event.target.value)}>
+                <option value="">Select a brand</option>
+                {yarnBrands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+                <option value="custom">Custom Brand</option>
+              </select>
+            </Field>
+            <Field label="Yarn color">
+              <select value={selectedLibraryColorId} onChange={(event) => applyLibraryColor(event.target.value)} disabled={!selectedLibraryBrandId}>
+                <option value="">Select color</option>
+                {selectedLibraryBrand && selectedLibraryBrand.colors.length === 0 && <option value="" disabled>Add color to Yarn Library.</option>}
+                {selectedLibraryBrand?.colors.map((color) => <option key={color.id} value={color.id}>{color.name}</option>)}
+                {selectedLibraryBrandId && <option value="custom">Custom Color</option>}
+              </select>
+            </Field>
           </div>
+          <p className="text-xs text-slate-400">
+            Pick a saved brand/color to auto-fill the fields below, or leave the dropdowns blank and enter a custom brand manually.
+          </p>
+          {(selectedLibraryBrandId === 'custom' || selectedLibraryColorId === 'custom') && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {selectedLibraryBrandId === 'custom' && (
+                <Field label="Custom brand"><input value={form.brand} onChange={(event) => setForm({ ...form, brand: event.target.value })} /></Field>
+              )}
+              {selectedLibraryColorId === 'custom' && (
+                <Field label="Custom color"><input value={form.yarnColor} onChange={(event) => setForm({ ...form, yarnColor: event.target.value })} /></Field>
+              )}
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Color family">
+              <select value={form.colorFamily} onChange={(event) => setForm({ ...form, colorFamily: event.target.value as ColorFamily })}>
+                {colorFamilies.map((family) => <option key={family}>{family}</option>)}
+              </select>
+            </Field>
+            <Field label="Hex preview"><input type="color" value={form.hexColor} onChange={(event) => setForm({ ...form, hexColor: event.target.value })} /></Field>
+          </div>
+          <Field label="Color code / SKU"><input value={form.colorCode} onChange={(event) => setForm({ ...form, colorCode: event.target.value })} /></Field>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Quantity"><input type="number" min="0" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })} /></Field>
             <Field label="Low stock number"><input type="number" min="0" value={form.lowStockThreshold} onChange={(event) => setForm({ ...form, lowStockThreshold: Number(event.target.value) })} /></Field>
@@ -841,10 +1055,12 @@ function CustomersPage({
   customers,
   projects,
   setCustomers,
+  onNotify,
 }: {
   customers: Customer[]
   projects: Project[]
   setCustomers: Dispatch<SetStateAction<Customer[]>>
+  onNotify: (message: string) => void
 }) {
   const [form, setForm] = useState<CustomerFormState>(defaultCustomerForm)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -872,8 +1088,10 @@ function CustomersPage({
 
     if (editingId) {
       setCustomers((current) => current.map((customer) => (customer.id === editingId ? { ...customer, ...form } : customer)))
+      onNotify('Customer updated.')
     } else {
       setCustomers((current) => [{ id: crypto.randomUUID(), ...form }, ...current])
+      onNotify('Customer saved.')
     }
 
     setForm(defaultCustomerForm)
@@ -955,7 +1173,14 @@ function CustomersPage({
                     ))}
                   </div>
                 )}
-                <RowActions onEdit={() => edit(customer)} onDelete={() => setCustomers((current) => current.filter((entry) => entry.id !== customer.id))} />
+                <RowActions
+                  onEdit={() => edit(customer)}
+                  onDelete={() => {
+                    setCustomers((current) => current.filter((entry) => entry.id !== customer.id))
+                    onNotify('Customer deleted.')
+                  }}
+                  confirmMessage={`Delete ${customer.name}?`}
+                />
               </div>
             )})
           )}
@@ -985,9 +1210,11 @@ function CustomersPage({
 function ExpensesPage({
   expenses,
   setExpenses,
+  onNotify,
 }: {
   expenses: Expense[]
   setExpenses: Dispatch<SetStateAction<Expense[]>>
+  onNotify: (message: string) => void
 }) {
   const [form, setForm] = useState<ExpenseFormState>(defaultExpenseForm)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -1017,8 +1244,10 @@ function ExpensesPage({
 
     if (editingId) {
       setExpenses((current) => current.map((expense) => (expense.id === editingId ? { ...expense, ...form } : expense)))
+      onNotify('Expense updated.')
     } else {
       setExpenses((current) => [{ id: crypto.randomUUID(), ...form }, ...current])
+      onNotify('Expense saved.')
     }
 
     setForm(defaultExpenseForm)
@@ -1106,7 +1335,11 @@ function ExpensesPage({
                 {expense.notes && <p className="mt-3 text-sm text-slate-300">{expense.notes}</p>}
                 <RowActions
                   onEdit={() => edit(expense)}
-                  onDelete={() => setExpenses((current) => current.filter((entry) => entry.id !== expense.id))}
+                  onDelete={() => {
+                    setExpenses((current) => current.filter((entry) => entry.id !== expense.id))
+                    onNotify('Expense deleted.')
+                  }}
+                  confirmMessage={`Delete ${expense.itemName}?`}
                 />
               </div>
             ))
@@ -1134,6 +1367,183 @@ function ExpensesPage({
         </form>
       </Modal>
       <FloatingActionButton label="Add expense" onClick={openCreateModal} />
+    </div>
+  )
+}
+
+function YarnLibraryPage({
+  brands,
+  setBrands,
+  onNotify,
+}: {
+  brands: YarnBrand[]
+  setBrands: Dispatch<SetStateAction<YarnBrand[]>>
+  onNotify: (message: string) => void
+}) {
+  const [brandName, setBrandName] = useState('')
+  const [brandSource, setBrandSource] = useState('')
+  const [brandWebsite, setBrandWebsite] = useState('')
+  const [brandNotes, setBrandNotes] = useState('')
+  const [editingBrandId, setEditingBrandId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [brandFilter, setBrandFilter] = useState('All')
+  const [familyFilter, setFamilyFilter] = useState<'All' | ColorFamily>('All')
+  const [activeColorBrandId, setActiveColorBrandId] = useState<string | null>(null)
+  const [colorForm, setColorForm] = useState<Omit<YarnColor, 'id'>>({
+    name: '',
+    sku: '',
+    family: 'Multi',
+    hexColor: '#ffffff',
+    photo: '',
+    inStockQuantity: 0,
+    notes: '',
+  })
+
+  const visibleBrands = brands.filter((brand) => brandFilter === 'All' || brand.name === brandFilter)
+  const visibleColors = visibleBrands.flatMap((brand) =>
+    brand.colors
+      .filter((color) => {
+        const query = searchTerm.trim().toLowerCase()
+        const matchesSearch = !query || color.name.toLowerCase().includes(query) || color.sku.toLowerCase().includes(query)
+        const matchesFamily = familyFilter === 'All' || color.family === familyFilter
+        return matchesSearch && matchesFamily
+      })
+      .map((color) => ({ brand, color })),
+  )
+
+  function saveBrand() {
+    if (!brandName.trim()) return
+    if (editingBrandId) {
+      setBrands((current) =>
+        current.map((brand) =>
+          brand.id === editingBrandId
+            ? { ...brand, name: brandName, source: brandSource, website: brandWebsite, notes: brandNotes }
+            : brand,
+        ),
+      )
+      onNotify('Yarn brand updated.')
+    } else {
+      setBrands((current) => [
+        ...current,
+        { id: crypto.randomUUID(), name: brandName, source: brandSource, website: brandWebsite, notes: brandNotes, colors: [] },
+      ])
+      onNotify('Yarn brand saved.')
+    }
+    setBrandName('')
+    setBrandSource('')
+    setBrandWebsite('')
+    setBrandNotes('')
+    setEditingBrandId(null)
+  }
+
+  function editBrand(brand: YarnBrand) {
+    setEditingBrandId(brand.id)
+    setBrandName(brand.name)
+    setBrandSource(brand.source)
+    setBrandWebsite(brand.website)
+    setBrandNotes(brand.notes)
+  }
+
+  function deleteBrand(id: string) {
+    setBrands((current) => current.filter((brand) => brand.id !== id))
+    onNotify('Yarn brand deleted.')
+  }
+
+  function saveColor(brandId: string) {
+    if (!colorForm.name.trim()) return
+    setBrands((current) =>
+      current.map((brand) =>
+        brand.id === brandId ? { ...brand, colors: [...brand.colors, { id: crypto.randomUUID(), ...colorForm }] } : brand,
+      ),
+    )
+    setColorForm({ name: '', sku: '', family: 'Multi', hexColor: '#ffffff', photo: '', inStockQuantity: 0, notes: '' })
+    setActiveColorBrandId(null)
+    onNotify('Yarn color saved.')
+  }
+
+  return (
+    <div className="space-y-6">
+      <Panel title={editingBrandId ? 'Edit yarn brand' : 'Add yarn brand'}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Brand name"><input value={brandName} onChange={(event) => setBrandName(event.target.value)} /></Field>
+          <Field label="Store/source"><input value={brandSource} onChange={(event) => setBrandSource(event.target.value)} /></Field>
+          <Field label="Website"><input value={brandWebsite} onChange={(event) => setBrandWebsite(event.target.value)} /></Field>
+          <Field label="Notes"><input value={brandNotes} onChange={(event) => setBrandNotes(event.target.value)} /></Field>
+        </div>
+        <div className="mt-4 flex gap-3">
+          <button onClick={saveBrand} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950">Save brand</button>
+          {editingBrandId && <button onClick={() => setEditingBrandId(null)} className="rounded-2xl border border-white/10 px-4 py-3 text-slate-200">Cancel</button>}
+        </div>
+      </Panel>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <input placeholder="Search yarn colors" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
+        <select value={brandFilter} onChange={(event) => setBrandFilter(event.target.value)}>
+          <option>All</option>
+          {brands.map((brand) => <option key={brand.id}>{brand.name}</option>)}
+        </select>
+        <select value={familyFilter} onChange={(event) => setFamilyFilter(event.target.value as 'All' | ColorFamily)}>
+          <option>All</option>
+          {colorFamilies.map((family) => <option key={family}>{family}</option>)}
+        </select>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {visibleBrands.map((brand) => (
+          <Panel key={brand.id} title={brand.name}>
+            <div className="space-y-4">
+              <div className="text-sm text-slate-300">
+                <p>{brand.source || 'No source listed'}</p>
+                <p>{brand.website || 'No website listed'}</p>
+                {brand.notes && <p className="mt-2 text-slate-400">{brand.notes}</p>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => editBrand(brand)} className="rounded-full bg-purple-400/15 px-4 py-2 text-sm text-purple-100">Edit</button>
+                <button onClick={() => deleteBrand(brand.id)} className="rounded-full bg-pink-400/15 px-4 py-2 text-sm text-pink-100">Delete</button>
+                <button onClick={() => setActiveColorBrandId(brand.id)} className="rounded-full bg-teal-400/15 px-4 py-2 text-sm text-teal-100">Add color</button>
+              </div>
+              {activeColorBrandId === brand.id && (
+                <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Color name"><input value={colorForm.name} onChange={(event) => setColorForm({ ...colorForm, name: event.target.value })} /></Field>
+                    <Field label="Color code/SKU"><input value={colorForm.sku} onChange={(event) => setColorForm({ ...colorForm, sku: event.target.value })} /></Field>
+                    <Field label="Color family">
+                      <select value={colorForm.family} onChange={(event) => setColorForm({ ...colorForm, family: event.target.value as ColorFamily })}>
+                        {colorFamilies.map((family) => <option key={family}>{family}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Hex color preview"><input type="color" value={colorForm.hexColor} onChange={(event) => setColorForm({ ...colorForm, hexColor: event.target.value })} /></Field>
+                    <Field label="In stock quantity"><input type="number" value={colorForm.inStockQuantity} onChange={(event) => setColorForm({ ...colorForm, inStockQuantity: Number(event.target.value) })} /></Field>
+                    <Field label="Photo upload placeholder"><input placeholder="Photo upload later" disabled /></Field>
+                  </div>
+                  <Field label="Notes"><textarea rows={3} value={colorForm.notes} onChange={(event) => setColorForm({ ...colorForm, notes: event.target.value })} /></Field>
+                  <button onClick={() => saveColor(brand.id)} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950">Save color</button>
+                </div>
+              )}
+            </div>
+          </Panel>
+        ))}
+      </div>
+
+      <Panel title="Color palette">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {visibleColors.length === 0 ? (
+            <EmptyState message="No yarn colors match the current filters." />
+          ) : visibleColors.map(({ brand, color }) => (
+            <div key={color.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex items-center gap-3">
+                <span className="h-10 w-10 rounded-full border border-white/20" style={{ backgroundColor: color.hexColor }} />
+                <div>
+                  <p className="font-medium text-white">{color.name}</p>
+                  <p className="text-sm text-slate-400">{brand.name} · {color.family}</p>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-slate-400">SKU {color.sku || '—'} · In stock {color.inStockQuantity}</p>
+              {color.notes && <p className="mt-2 text-sm text-slate-300">{color.notes}</p>}
+            </div>
+          ))}
+        </div>
+      </Panel>
     </div>
   )
 }
@@ -1313,6 +1723,7 @@ function ProjectDetailPage({
     depositPaid: project.depositPaid,
     dueDate: project.dueDate,
     notes: project.notes,
+    photos: project.photos,
   })
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [error, setError] = useState('')
@@ -1330,6 +1741,7 @@ function ProjectDetailPage({
       depositPaid: project.depositPaid,
       dueDate: project.dueDate,
       notes: project.notes,
+      photos: project.photos,
     })
   }, [project])
 
@@ -1348,6 +1760,33 @@ function ProjectDetailPage({
   function markFinished() {
     onUpdate(project.id, { ...form, status: 'Finished' })
     setForm((current) => ({ ...current, status: 'Finished' }))
+  }
+
+  function addPhotos(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    if (files.length === 0) return
+
+    Promise.all(
+      files.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(String(reader.result))
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          }),
+      ),
+    ).then((newPhotos) => {
+      const nextForm = { ...form, photos: [...form.photos, ...newPhotos] }
+      setForm(nextForm)
+      onUpdate(project.id, nextForm)
+    })
+  }
+
+  function removePhoto(photo: string) {
+    const nextForm = { ...form, photos: form.photos.filter((entry) => entry !== photo) }
+    setForm(nextForm)
+    onUpdate(project.id, nextForm)
   }
 
   return (
@@ -1427,7 +1866,30 @@ function ProjectDetailPage({
           )}
         </Panel>
         <Panel title="Photos">
-          <EmptyState message="Photos section placeholder. Add uploaded project photos here later." />
+          <div className="space-y-4">
+            <label className="block cursor-pointer rounded-2xl border border-dashed border-teal-300/30 bg-teal-300/[0.06] p-4 text-center text-sm text-teal-100 transition hover:bg-teal-300/[0.1]">
+              Upload project photos
+              <input className="hidden" type="file" accept="image/*" multiple onChange={addPhotos} />
+            </label>
+            {form.photos.length === 0 ? (
+              <EmptyState message="No photos yet. Upload progress shots or finished-rug photos here." />
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {form.photos.map((photo) => (
+                  <div key={photo} className="group relative overflow-hidden rounded-2xl border border-white/10">
+                    <img src={photo} alt="Project preview" className="h-32 w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(photo)}
+                      className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Panel>
       </section>
 
@@ -1513,7 +1975,7 @@ function Modal({
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#0d1020] p-4 shadow-[0_0_60px_rgba(45,212,191,0.18)] sm:p-6">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Hyper J Ruggs</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-teal-300">powered by Hyper J Ruggs</p>
             <h3 className="mt-2 text-xl font-semibold text-white">{title}</h3>
           </div>
           <button
@@ -1567,16 +2029,25 @@ function RowActions({
   onEdit,
   onDelete,
   extraAction,
+  confirmMessage = 'Delete this item?',
 }: {
   onEdit: () => void
   onDelete: () => void
   extraAction?: ReactNode
+  confirmMessage?: string
 }) {
   return (
     <div className="mt-4 flex flex-wrap gap-2">
       {extraAction}
       <button onClick={onEdit} className="rounded-full bg-purple-400/15 px-4 py-2 text-sm text-purple-100 hover:bg-purple-400/25">Edit</button>
-      <button onClick={onDelete} className="rounded-full bg-pink-400/15 px-4 py-2 text-sm text-pink-100 hover:bg-pink-400/25">Delete</button>
+      <button
+        onClick={() => {
+          if (window.confirm(confirmMessage)) onDelete()
+        }}
+        className="rounded-full bg-pink-400/15 px-4 py-2 text-sm text-pink-100 hover:bg-pink-400/25"
+      >
+        Delete
+      </button>
     </div>
   )
 }
@@ -1584,6 +2055,14 @@ function RowActions({
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-4 text-sm text-slate-400">
+      {message}
+    </div>
+  )
+}
+
+function Toast({ message }: { message: string }) {
+  return (
+    <div className="fixed left-1/2 top-4 z-[60] -translate-x-1/2 rounded-full border border-teal-300/20 bg-[#0d1020]/95 px-4 py-3 text-sm text-teal-100 shadow-[0_0_28px_rgba(45,212,191,0.18)] backdrop-blur">
       {message}
     </div>
   )
