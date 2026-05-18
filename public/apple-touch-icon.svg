@@ -1,8 +1,19 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <rect width="512" height="512" rx="120" fill="#070814"/>
-  <circle cx="138" cy="138" r="160" fill="#2DD4BF" fill-opacity=".18"/>
-  <circle cx="382" cy="118" r="150" fill="#C084FC" fill-opacity=".18"/>
-  <circle cx="274" cy="388" r="170" fill="#F472B6" fill-opacity=".18"/>
-  <path d="M120 350V162h58l78 104 78-104h58v188h-58V252l-78 98-78-98v98h-58Z" fill="white"/>
-  <path d="M132 374h248" stroke="#2DD4BF" stroke-width="18" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="64" x2="448" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#070814"/>
+    </linearGradient>
+    <linearGradient id="thread" x1="154" y1="152" x2="360" y2="362" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5EEAD4"/>
+      <stop offset=".52" stop-color="#E9D5FF"/>
+      <stop offset="1" stop-color="#F9A8D4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="132" fill="url(#bg)"/>
+  <circle cx="146" cy="148" r="150" fill="#2DD4BF" fill-opacity=".18"/>
+  <circle cx="370" cy="132" r="144" fill="#C084FC" fill-opacity=".18"/>
+  <circle cx="286" cy="390" r="168" fill="#F472B6" fill-opacity=".18"/>
+  <path d="M136 158c0-18 14-32 32-32h176c18 0 32 14 32 32s-14 32-32 32h-55v160c0 18-15 33-33 33s-33-15-33-33V190h-55c-18 0-32-14-32-32Z" fill="url(#thread)"/>
+  <path d="M150 382c34-18 69-27 106-27 38 0 74 9 108 27" stroke="#2DD4BF" stroke-linecap="round" stroke-width="18"/>
 </svg>
