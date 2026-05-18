@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import type { ChangeEvent, Dispatch, FormEvent, ReactElement, ReactNode, SetStateAction } from 'react'
+import { masterYarnDatabase } from './masterYarnDatabase'
 
 type ProjectStatus = 'Quote' | 'Approved' | 'Tufting' | 'Gluing' | 'Finished' | 'Picked Up'
 
@@ -71,6 +72,7 @@ type YarnColor = {
   website: string
   photo: string
   inStockQuantity: number
+  reorderLevel: number
   notes: string
 }
 
@@ -130,31 +132,71 @@ const sampleExpenses: Expense[] = [
   { id: 'e3', itemName: 'Spring maker booth', category: 'Booth/Event Fee', cost: 120, date: '2026-05-12', supplier: 'Downtown Market', notes: 'Weekend vendor fee' },
 ]
 
-const sampleYarnBrands: YarnBrand[] = [
-  {
-    id: 'yb1',
-    name: 'I Love This Yarn',
-    source: '',
-    website: '',
-    notes: '',
-    colors: [],
-  },
-  {
-    id: 'yb2',
-    name: 'Red Heart Super Saver',
-    source: '',
-    website: '',
-    notes: '',
-    colors: [],
-  },
-  { id: 'yb3', name: 'Caron One Pound', source: '', website: '', notes: '', colors: [] },
-  { id: 'yb4', name: 'Loops & Threads', source: '', website: '', notes: '', colors: [] },
-  { id: 'yb5', name: 'Big Twist', source: '', website: '', notes: '', colors: [] },
-  { id: 'yb6', name: 'Mainstays', source: '', website: '', notes: '', colors: [] },
-  { id: 'yb7', name: 'Lion Brand', source: '', website: '', notes: '', colors: [] },
-  { id: 'yb8', name: 'Premier Yarns', source: '', website: '', notes: '', colors: [] },
-  { id: 'yb9', name: 'Bernat', source: '', website: '', notes: '', colors: [] },
-]
+function toColorFamily(value: string, colorName = ''): ColorFamily {
+  const combined = `${value} ${colorName}`.toLowerCase()
+  if (combined.includes('red')) return 'Red'
+  if (combined.includes('orange')) return 'Orange'
+  if (combined.includes('yellow') || combined.includes('gold')) return 'Yellow'
+  if (combined.includes('green')) return 'Green'
+  if (combined.includes('blue') || combined.includes('teal') || combined.includes('aqua')) return 'Blue'
+  if (combined.includes('purple') || combined.includes('violet') || combined.includes('lilac')) return 'Purple'
+  if (combined.includes('pink') || combined.includes('rose')) return 'Pink'
+  if (combined.includes('brown') || combined.includes('tan') || combined.includes('aran')) return 'Brown'
+  if (combined.includes('black')) return 'Black'
+  if (combined.includes('white')) return 'White'
+  if (combined.includes('gray') || combined.includes('grey') || combined.includes('silver')) return 'Gray'
+  if (combined.includes('neon')) return 'Neon'
+  return 'Multi'
+}
+
+function buildStarterYarnBrands(): YarnBrand[] {
+  const brandMap = new Map<string, YarnBrand>()
+
+  ;(masterYarnDatabase as readonly Record<string, string | number | boolean>[]).forEach((row) => {
+    const brandName = String(row.brand || 'Unknown Brand')
+    let brand = brandMap.get(brandName)
+    if (!brand) {
+      brand = {
+        id: `brand-${brandName.toLowerCase().replaceAll(/\s+/g, '-')}`,
+        name: brandName,
+        source: String(row.store ?? brandName),
+        website: String(row.sourceUrl ?? ''),
+        notes: 'Starter yarn database import.',
+        colors: [],
+      }
+      brandMap.set(brandName, brand)
+    }
+
+    brand.colors.push({
+      id: String(row.id),
+      name: String(row.colorName || row.color_name || ''),
+      line: String(row.line ?? ''),
+      sku: String(row.sku ?? ''),
+      upc: String(row.barcode ?? ''),
+      family: toColorFamily(String(row.colorFamily ?? ''), String(row.colorName ?? '')),
+      hexColor: String(row.hex || '#ffffff'),
+      weight: String(row.weight ?? ''),
+      yardage: String(row.yardage ?? ''),
+      fiber: String(row.fiber ?? ''),
+      store: String(row.store ?? brandName),
+      website: String(row.sourceUrl ?? ''),
+      photo: String(row.swatchImageUrl ?? ''),
+      inStockQuantity: Number(row.quantity ?? 0),
+      reorderLevel: Number(row.reorderLevel ?? 0),
+      notes: String(row.notes ?? ''),
+    })
+  })
+
+  starterYarnBrandNames.forEach((name) => {
+    if (!brandMap.has(name)) {
+      brandMap.set(name, { id: crypto.randomUUID(), name, source: '', website: '', notes: '', colors: [] })
+    }
+  })
+
+  return [...brandMap.values()]
+}
+
+const sampleYarnBrands: YarnBrand[] = buildStarterYarnBrands()
 
 const defaultProjectForm: ProjectFormState = {
   name: '',
@@ -275,6 +317,7 @@ function normalizeYarnBrands(brands: YarnBrand[]) {
       website: color.website ?? brand.website ?? '',
       photo: color.photo ?? '',
       notes: color.notes ?? '',
+      reorderLevel: color.reorderLevel ?? 0,
     })),
   }))
 
@@ -386,6 +429,7 @@ function App() {
         website: result.sourceWebsite,
         photo: '',
         inStockQuantity: 0,
+        reorderLevel: 0,
         notes: `Saved from ${result.sourceWebsite}`,
       }
 
@@ -489,7 +533,7 @@ function App() {
           )}
           {page === 'customers' && <CustomersPage customers={customers} projects={projects} setCustomers={setCustomers} onNotify={notify} />}
           {page === 'expenses' && <ExpensesPage expenses={expenses} setExpenses={setExpenses} onNotify={notify} />}
-          {page === 'yarnLibrary' && <YarnLibraryPage brands={yarnBrands} setBrands={setYarnBrands} onNotify={notify} onSaveWebYarnResult={saveWebYarnResult} />}
+          {page === 'yarnLibrary' && <YarnLibraryPage brands={yarnBrands} setBrands={setYarnBrands} onNotify={notify} onSaveWebYarnResult={saveWebYarnResult} onAddToInventory={createInventoryItem} />}
           {page === 'settings' && (
             <SettingsPage
               projects={projects}
@@ -1572,11 +1616,13 @@ function YarnLibraryPage({
   setBrands,
   onNotify,
   onSaveWebYarnResult,
+  onAddToInventory,
 }: {
   brands: YarnBrand[]
   setBrands: Dispatch<SetStateAction<YarnBrand[]>>
   onNotify: (message: string) => void
   onSaveWebYarnResult: (result: WebYarnResult) => void
+  onAddToInventory: (item: InventoryFormState) => void
 }) {
   const [brandName, setBrandName] = useState('')
   const [brandSource, setBrandSource] = useState('')
@@ -1603,6 +1649,7 @@ function YarnLibraryPage({
     website: '',
     photo: '',
     inStockQuantity: 0,
+    reorderLevel: 0,
     notes: '',
   })
 
@@ -1611,7 +1658,12 @@ function YarnLibraryPage({
     brand.colors
       .filter((color) => {
         const query = searchTerm.trim().toLowerCase()
-        const matchesSearch = !query || color.name.toLowerCase().includes(query) || color.sku.toLowerCase().includes(query)
+        const matchesSearch =
+          !query ||
+          brand.name.toLowerCase().includes(query) ||
+          color.name.toLowerCase().includes(query) ||
+          color.family.toLowerCase().includes(query) ||
+          color.sku.toLowerCase().includes(query)
         const matchesFamily = familyFilter === 'All' || color.family === familyFilter
         return matchesSearch && matchesFamily
       })
@@ -1663,7 +1715,7 @@ function YarnLibraryPage({
         brand.id === brandId ? { ...brand, colors: [...brand.colors, { id: crypto.randomUUID(), ...colorForm }] } : brand,
       ),
     )
-    setColorForm({ name: '', line: '', sku: '', upc: '', family: 'Multi', hexColor: '#ffffff', weight: '', yardage: '', fiber: '', store: '', website: '', photo: '', inStockQuantity: 0, notes: '' })
+    setColorForm({ name: '', line: '', sku: '', upc: '', family: 'Multi', hexColor: '#ffffff', weight: '', yardage: '', fiber: '', store: '', website: '', photo: '', inStockQuantity: 0, reorderLevel: 0, notes: '' })
     setActiveColorBrandId(null)
     onNotify('Yarn color saved.')
   }
@@ -1705,7 +1757,7 @@ function YarnLibraryPage({
           brand = { id: crypto.randomUUID(), name: brandName, source: store, website, notes: '', colors: [] }
           next.push(brand)
         }
-        brand.colors.push({ id: crypto.randomUUID(), name: colorName, line, sku: colorCode, upc, family: (colorFamily as ColorFamily) || 'Multi', hexColor: hex || '#ffffff', weight, yardage, fiber, store, website, photo: '', inStockQuantity: 0, notes })
+        brand.colors.push({ id: crypto.randomUUID(), name: colorName, line, sku: colorCode, upc, family: (colorFamily as ColorFamily) || 'Multi', hexColor: hex || '#ffffff', weight, yardage, fiber, store, website, photo: '', inStockQuantity: 0, reorderLevel: 0, notes })
       })
       return [...next]
     })
@@ -1816,6 +1868,7 @@ function YarnLibraryPage({
                     <Field label="Fiber content"><input value={colorForm.fiber} onChange={(event) => setColorForm({ ...colorForm, fiber: event.target.value })} /></Field>
                     <Field label="Store/source"><input value={colorForm.store} onChange={(event) => setColorForm({ ...colorForm, store: event.target.value })} /></Field>
                     <Field label="Website"><input value={colorForm.website} onChange={(event) => setColorForm({ ...colorForm, website: event.target.value })} /></Field>
+                    <Field label="Reorder level"><input type="number" value={colorForm.reorderLevel} onChange={(event) => setColorForm({ ...colorForm, reorderLevel: Number(event.target.value) })} /></Field>
                     <Field label="In stock quantity"><input type="number" value={colorForm.inStockQuantity} onChange={(event) => setColorForm({ ...colorForm, inStockQuantity: Number(event.target.value) })} /></Field>
                     <Field label="Photo upload placeholder"><input placeholder="Photo upload later" disabled /></Field>
                   </div>
@@ -1844,8 +1897,30 @@ function YarnLibraryPage({
                 </div>
               </div>
               <p className="mt-3 text-sm text-slate-400">SKU {color.sku || '—'} · In stock {color.inStockQuantity}</p>
-              <p className="mt-1 text-xs text-slate-500">{color.line || 'No line'} · UPC {color.upc || '—'} · {color.weight || 'No weight'} · {color.yardage || 'No yardage'}</p>
+              <p className="mt-1 text-xs text-slate-500">{color.line || 'No line'} · UPC {color.upc || '—'} · {color.weight || 'No weight'} · {color.yardage || 'No yardage'} · {color.fiber || 'No fiber'} · Reorder {color.reorderLevel}</p>
               {color.notes && <p className="mt-2 text-sm text-slate-300">{color.notes}</p>}
+              <button
+                type="button"
+                onClick={() => {
+                  onAddToInventory({
+                    yarnColor: color.name,
+                    brand: brand.name,
+                    yarnLine: color.line,
+                    colorCode: color.sku,
+                    upc: color.upc,
+                    colorFamily: color.family,
+                    hexColor: color.hexColor,
+                    quantity: color.inStockQuantity,
+                    lowStockThreshold: color.reorderLevel,
+                    cost: 0,
+                    supplier: color.store,
+                    notes: color.notes,
+                  })
+                }}
+                className="mt-4 rounded-2xl bg-teal-300 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-teal-200"
+              >
+                Add to Inventory
+              </button>
               </div>
             </div>
           ))}
