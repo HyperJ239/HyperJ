@@ -427,9 +427,9 @@ function App() {
   return (
     <div className="min-h-screen bg-[#070814] text-slate-100">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(217,70,239,0.14),transparent_24%),radial-gradient(circle_at_bottom_center,rgba(236,72,153,0.12),transparent_28%)]" />
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row">
+      <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col gap-4 p-0 lg:flex-row lg:gap-6 lg:p-5">
         <Sidebar page={page} onChange={setPage} lowStockCount={lowStockItems.length} />
-        <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:py-8">
+        <main className="flex-1 px-4 pb-28 pt-5 sm:px-6 lg:rounded-[2rem] lg:border lg:border-white/10 lg:bg-white/[0.025] lg:px-6 lg:py-6 lg:shadow-[0_0_50px_rgba(0,0,0,0.28)] xl:px-8">
           <Header page={page} />
           {page === 'dashboard' && (
             <Dashboard stats={stats} projects={projects} lowStockItems={lowStockItems} />
@@ -492,7 +492,7 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
 
   return (
     <>
-    <aside className="border-b border-white/10 bg-white/[0.03] p-4 backdrop-blur lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
+    <aside className="border-b border-white/10 bg-white/[0.03] p-4 backdrop-blur lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:w-72 lg:shrink-0 lg:rounded-[2rem] lg:border lg:border-white/10 lg:p-5 lg:shadow-[0_0_40px_rgba(0,0,0,0.24)]">
       <BrandMark className="mb-5" />
       <nav className="hidden grid-cols-2 gap-2 sm:grid lg:grid-cols-1">
         {links.map((link) => (
@@ -509,7 +509,7 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
           </button>
         ))}
       </nav>
-      <div className="mt-5 rounded-3xl border border-pink-400/20 bg-pink-400/10 p-4">
+      <div className="mt-5 rounded-3xl border border-pink-400/20 bg-pink-400/10 p-4 shadow-[0_0_24px_rgba(244,114,182,0.08)]">
         <p className="text-sm text-pink-100">Low-stock alerts</p>
         <p className="mt-2 text-3xl font-semibold text-pink-300">{lowStockCount}</p>
       </div>
@@ -545,9 +545,14 @@ function Header({ page }: { page: Page }) {
   }
 
   return (
-    <header className="mb-6 flex flex-col gap-2">
+    <header className="mb-6 rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 shadow-2xl shadow-black/10 sm:p-5">
       <p className="text-sm text-slate-400">by Hyper J Ruggs</p>
-      <h2 className="text-3xl font-semibold tracking-tight text-white">{titles[page]}</h2>
+      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="text-3xl font-semibold tracking-tight text-white">{titles[page]}</h2>
+        <span className="w-fit rounded-full border border-teal-300/15 bg-teal-300/[0.08] px-3 py-1 text-xs text-teal-100">
+          TuftTrack web app
+        </span>
+      </div>
     </header>
   )
 }
@@ -556,7 +561,7 @@ function BrandMark({ className = '' }: { className?: string }) {
   return (
     <div className={className}>
       <p className="text-xs uppercase tracking-[0.35em] text-teal-300">by Hyper J Ruggs</p>
-      <div className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 shadow-[0_0_28px_rgba(45,212,191,0.18),0_0_32px_rgba(236,72,153,0.08)]">
+      <div className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 shadow-[0_0_28px_rgba(45,212,191,0.18),0_0_32px_rgba(236,72,153,0.08)]">
         <h1 className="bg-gradient-to-r from-teal-200 via-white to-pink-200 bg-clip-text text-2xl font-semibold tracking-[0.03em] text-transparent drop-shadow-[0_0_14px_rgba(45,212,191,0.25)]">
           TuftTrack
         </h1>
@@ -577,7 +582,7 @@ function Dashboard({ stats, projects, lowStockItems }: { stats: { label: string;
     <div className="space-y-6">
       <section className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className={`rounded-3xl border p-4 shadow-2xl shadow-black/20 sm:p-5 ${accentStyles[stat.accent]}`}>
+          <div key={stat.label} className={`rounded-[1.75rem] border p-4 shadow-2xl shadow-black/20 transition hover:-translate-y-0.5 sm:p-5 ${accentStyles[stat.accent]}`}>
             <p className="text-sm text-slate-400">{stat.label}</p>
             <p className="mt-3 text-3xl font-semibold text-white">{stat.value}</p>
           </div>
@@ -2111,7 +2116,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/20 sm:p-5">
+    <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl shadow-black/20 sm:p-5">
       <h3 className="mb-4 text-lg font-semibold text-white">{title}</h3>
       {children}
     </section>
