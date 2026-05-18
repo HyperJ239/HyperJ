@@ -712,7 +712,12 @@ function ProjectsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
+      <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 sm:p-5">
+        <div className="mb-4 flex flex-col gap-1">
+          <p className="text-sm text-slate-400">Production flow</p>
+          <h3 className="text-xl font-semibold text-white">Project pipeline</h3>
+        </div>
+        <div className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
           {(['All', ...projectStatuses] as const).map((status) => (
             <button
@@ -743,14 +748,15 @@ function ProjectsPage({
             Due date {dueDateSort === 'asc' ? '↑' : '↓'}
           </button>
         </div>
-      </div>
+        </div>
+      </section>
       <div className="sticky top-3 z-20 flex justify-end sm:static">
         <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 shadow-[0_0_24px_rgba(45,212,191,0.2)] transition hover:bg-teal-200">
           Add Project
         </button>
       </div>
       <Panel title="Project list">
-        <div className="space-y-3">
+        <div className="grid gap-4 xl:grid-cols-2">
           {projects.length === 0 ? (
             <EmptyState message="No projects yet. Use the form to create your first rug project." />
           ) : filteredProjects.length === 0 ? (
@@ -759,12 +765,13 @@ function ProjectsPage({
             filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`rounded-3xl border p-4 shadow-xl shadow-black/10 sm:p-5 ${
+                className={`group relative overflow-hidden rounded-[1.75rem] border p-4 shadow-xl shadow-black/10 transition hover:-translate-y-0.5 sm:p-5 ${
                   isOverdue(project)
                     ? 'border-pink-400/40 bg-pink-400/10 shadow-[0_0_28px_rgba(244,114,182,0.12)]'
                     : 'border-white/10 bg-white/[0.03]'
                 }`}
               >
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-300 via-purple-300 to-pink-300 opacity-80" />
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
                     <button
@@ -774,8 +781,12 @@ function ProjectsPage({
                     >
                       {project.name}
                     </button>
-                    <p className="text-sm text-slate-400">{project.customer} · {project.size} · {currency(project.price)}</p>
-                    <p className="mt-1 text-xs text-slate-500">Due {project.dueDate || 'TBD'}</p>
+                    <p className="text-sm text-slate-400">{project.customer}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                      <span className="rounded-2xl bg-white/5 px-3 py-2 text-slate-300">{project.size}</span>
+                      <span className="rounded-2xl bg-white/5 px-3 py-2 text-slate-300">{currency(project.price)}</span>
+                      <span className="rounded-2xl bg-white/5 px-3 py-2 text-slate-300">Due {project.dueDate || 'TBD'}</span>
+                    </div>
                     {isOverdue(project) && <p className="mt-1 text-xs font-medium text-pink-200">Overdue</p>}
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
                       <span className="rounded-full bg-teal-400/15 px-3 py-1 text-teal-100">
@@ -788,7 +799,7 @@ function ProjectsPage({
                   </div>
                   <StatusPill status={project.status} />
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
                   {projectStatuses.map((status) => (
                     <button
                       key={status}
@@ -1534,7 +1545,8 @@ function YarnLibraryPage({
 
   return (
     <div className="space-y-6">
-      <WebYarnLookup onSave={onSaveWebYarnResult} />
+      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <WebYarnLookup onSave={onSaveWebYarnResult} />
 
       <Panel title={editingBrandId ? 'Edit yarn brand' : 'Add yarn brand'}>
         <div className="grid gap-4 md:grid-cols-2">
@@ -1548,8 +1560,14 @@ function YarnLibraryPage({
           {editingBrandId && <button onClick={() => setEditingBrandId(null)} className="rounded-2xl border border-white/10 px-4 py-3 text-slate-200">Cancel</button>}
         </div>
       </Panel>
+      </section>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 sm:p-5">
+        <div className="mb-4">
+          <p className="text-sm text-slate-400">Browse library</p>
+          <h3 className="text-xl font-semibold text-white">Filter the palette</h3>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
         <input placeholder="Search yarn colors" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
         <select value={brandFilter} onChange={(event) => setBrandFilter(event.target.value)}>
           <option>All</option>
@@ -1559,16 +1577,22 @@ function YarnLibraryPage({
           <option>All</option>
           {colorFamilies.map((family) => <option key={family}>{family}</option>)}
         </select>
-      </div>
+        </div>
+      </section>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {visibleBrands.map((brand) => (
           <Panel key={brand.id} title={brand.name}>
             <div className="space-y-4">
-              <div className="text-sm text-slate-300">
-                <p>{brand.source || 'No source listed'}</p>
-                <p>{brand.website || 'No website listed'}</p>
-                {brand.notes && <p className="mt-2 text-slate-400">{brand.notes}</p>}
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+                <div className="text-sm text-slate-300">
+                  <p>{brand.source || 'No source listed'}</p>
+                  <p>{brand.website || 'No website listed'}</p>
+                  {brand.notes && <p className="mt-2 text-slate-400">{brand.notes}</p>}
+                </div>
+                <span className="w-fit rounded-full border border-teal-300/15 bg-teal-300/[0.08] px-3 py-1 text-xs text-teal-100">
+                  {brand.colors.length} colors
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => editBrand(brand)} className="rounded-full bg-purple-400/15 px-4 py-2 text-sm text-purple-100">Edit</button>
@@ -1603,9 +1627,11 @@ function YarnLibraryPage({
           {visibleColors.length === 0 ? (
             <EmptyState message="No yarn colors match the current filters." />
           ) : visibleColors.map(({ brand, color }) => (
-            <div key={color.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div key={color.id} className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03]">
+              <div className="h-20 border-b border-white/10" style={{ background: `linear-gradient(135deg, ${color.hexColor}, #070814)` }} />
+              <div className="p-4">
               <div className="flex items-center gap-3">
-                <span className="h-10 w-10 rounded-full border border-white/20" style={{ backgroundColor: color.hexColor }} />
+                <span className="h-10 w-10 rounded-full border border-white/20 shadow-[0_0_18px_rgba(255,255,255,0.12)]" style={{ backgroundColor: color.hexColor }} />
                 <div>
                   <p className="font-medium text-white">{color.name}</p>
                   <p className="text-sm text-slate-400">{brand.name} · {color.family}</p>
@@ -1613,6 +1639,7 @@ function YarnLibraryPage({
               </div>
               <p className="mt-3 text-sm text-slate-400">SKU {color.sku || '—'} · In stock {color.inStockQuantity}</p>
               {color.notes && <p className="mt-2 text-sm text-slate-300">{color.notes}</p>}
+              </div>
             </div>
           ))}
         </div>
