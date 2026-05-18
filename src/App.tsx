@@ -580,13 +580,22 @@ function Dashboard({ stats, projects, lowStockItems }: { stats: { label: string;
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-2xl shadow-black/20">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm text-slate-400">Business pulse</p>
+            <h3 className="text-2xl font-semibold text-white">Today at a glance</h3>
+          </div>
+          <span className="w-fit rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">{projects.length} tracked projects</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.label} className={`rounded-[1.75rem] border p-4 shadow-2xl shadow-black/20 transition hover:-translate-y-0.5 sm:p-5 ${accentStyles[stat.accent]}`}>
             <p className="text-sm text-slate-400">{stat.label}</p>
             <p className="mt-3 text-3xl font-semibold text-white">{stat.value}</p>
           </div>
         ))}
+        </div>
       </section>
       <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
         <Panel title="Recent projects">
@@ -595,7 +604,7 @@ function Dashboard({ stats, projects, lowStockItems }: { stats: { label: string;
               <EmptyState message="No projects yet. Add your first rug project to start tracking work." />
             ) : (
               latestProjects.map((project) => (
-                <div key={project.id} className="flex flex-col gap-3 rounded-2xl bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div key={project.id} className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-medium text-white">{project.name}</p>
                     <p className="text-sm text-slate-400">{project.customer}</p>
@@ -996,6 +1005,7 @@ function InventoryPage({
 
   return (
     <div className="space-y-6">
+      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
       <Panel title="Low Stock">
         <div className="space-y-3">
           {lowStockItems.length === 0 ? (
@@ -1015,6 +1025,11 @@ function InventoryPage({
           )}
         </div>
       </Panel>
+      <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 sm:p-5">
+        <div className="mb-4">
+          <p className="text-sm text-slate-400">Find inventory</p>
+          <h3 className="text-xl font-semibold text-white">Stock controls</h3>
+        </div>
       <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
         <input
           placeholder="Search yarn color, brand, or supplier"
@@ -1040,13 +1055,15 @@ function InventoryPage({
           Quantity {quantitySort === 'asc' ? '↑' : '↓'}
         </button>
       </div>
+      </section>
+      </section>
       <div className="sticky top-3 z-20 flex justify-end sm:static">
         <button onClick={openCreateModal} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 shadow-[0_0_24px_rgba(45,212,191,0.2)] transition hover:bg-teal-200">
           Add Inventory Item
         </button>
       </div>
       <Panel title="Inventory list">
-        <div className="space-y-3">
+        <div className="grid gap-4 xl:grid-cols-2">
           {inventory.length === 0 ? (
             <EmptyState message="No inventory items yet. Add yarn, glue, backing, or tools to begin tracking stock." />
           ) : visibleInventory.length === 0 ? (
@@ -1054,7 +1071,9 @@ function InventoryPage({
           ) : visibleInventory.map((item) => {
             const low = item.quantity <= item.lowStockThreshold
             return (
-              <div key={item.id} className={`rounded-2xl border p-4 ${low ? 'border-pink-400/30 bg-pink-400/10' : 'border-white/10 bg-white/[0.03]'}`}>
+              <div key={item.id} className={`overflow-hidden rounded-[1.75rem] border ${low ? 'border-pink-400/30 bg-pink-400/10' : 'border-white/10 bg-white/[0.03]'}`}>
+                <div className="h-16 border-b border-white/10" style={{ background: `linear-gradient(135deg, ${item.hexColor}, #070814)` }} />
+                <div className="p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-medium text-white">{item.yarnColor}</p>
@@ -1068,6 +1087,7 @@ function InventoryPage({
                   {low && <span className="rounded-full bg-pink-400/20 px-3 py-1 text-xs text-pink-100">Low stock</span>}
                 </div>
                 <RowActions onEdit={() => edit(item)} onDelete={() => onDelete(item.id)} confirmMessage={`Delete ${item.yarnColor}?`} />
+                </div>
               </div>
             )
           })}
@@ -1211,6 +1231,11 @@ function CustomersPage({
 
   return (
     <div className="space-y-6">
+      <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 sm:p-5">
+        <div className="mb-4">
+          <p className="text-sm text-slate-400">Client book</p>
+          <h3 className="text-xl font-semibold text-white">Customer directory</h3>
+        </div>
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <input
           placeholder="Search customers"
@@ -1221,6 +1246,7 @@ function CustomersPage({
           Add Customer
         </button>
       </div>
+      </section>
       <Panel title="Customer list">
         <div className="grid gap-3 lg:grid-cols-2">
           {customers.length === 0 ? (
@@ -1231,7 +1257,7 @@ function CustomersPage({
             visibleCustomers.map((customer) => {
               const linkedProjects = projectsForCustomer(customer.name)
               return (
-              <div key={customer.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div key={customer.id} className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 shadow-xl shadow-black/10">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="font-medium text-white">{customer.name}</p>
@@ -1363,10 +1389,21 @@ function ExpensesPage({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-pink-300/20 bg-pink-300/[0.08] p-5 shadow-[0_0_28px_rgba(244,114,182,0.12)]">
-        <p className="text-sm text-slate-400">Total expenses</p>
-        <p className="mt-3 text-3xl font-semibold text-white">{currency(totalExpenses)}</p>
+      <section className="rounded-[2rem] border border-pink-300/20 bg-pink-300/[0.08] p-5 shadow-[0_0_28px_rgba(244,114,182,0.12)]">
+        <p className="text-sm text-slate-400">Spending overview</p>
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-2xl font-semibold text-white">Expenses</h3>
+            <p className="mt-2 text-3xl font-semibold text-white">{currency(totalExpenses)}</p>
+          </div>
+          <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs text-pink-100">{expenses.length} entries</span>
+        </div>
       </section>
+      <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 sm:p-5">
+        <div className="mb-4">
+          <p className="text-sm text-slate-400">Review costs</p>
+          <h3 className="text-xl font-semibold text-white">Expense controls</h3>
+        </div>
       <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
         <input
           placeholder="Search expenses"
@@ -1393,6 +1430,7 @@ function ExpensesPage({
           </button>
         ))}
       </div>
+      </section>
       <Panel title="Expense list">
         <div className="grid gap-3 lg:grid-cols-2">
           {expenses.length === 0 ? (
@@ -1401,7 +1439,7 @@ function ExpensesPage({
             <EmptyState message="No expenses match the current search or filter." />
           ) : (
             visibleExpenses.map((expense) => (
-              <div key={expense.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div key={expense.id} className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 shadow-xl shadow-black/10">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="font-medium text-white">{expense.itemName}</p>
