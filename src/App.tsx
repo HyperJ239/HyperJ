@@ -74,6 +74,15 @@ type YarnBrand = {
   colors: YarnColor[]
 }
 
+type WebYarnResult = {
+  brand: string
+  colorName: string
+  sku: string
+  family: ColorFamily
+  hexColor: string
+  sourceWebsite: string
+}
+
 type Page = 'dashboard' | 'projects' | 'inventory' | 'customers' | 'expenses' | 'yarnLibrary' | 'settings'
 
 type ProjectFormState = Omit<Project, 'id'>
@@ -339,6 +348,47 @@ function App() {
     notify('Inventory item deleted.')
   }
 
+  function saveWebYarnResult(result: WebYarnResult) {
+    setYarnBrands((current) => {
+      const existingBrand = current.find((brand) => brand.name === result.brand)
+      const nextColor: YarnColor = {
+        id: crypto.randomUUID(),
+        name: result.colorName,
+        sku: result.sku,
+        family: result.family,
+        hexColor: result.hexColor,
+        photo: '',
+        inStockQuantity: 0,
+        notes: `Saved from ${result.sourceWebsite}`,
+      }
+
+      if (existingBrand) {
+        const alreadySaved = existingBrand.colors.some(
+          (color) =>
+            color.name.toLowerCase() === result.colorName.toLowerCase() &&
+            color.sku.toLowerCase() === result.sku.toLowerCase(),
+        )
+        if (alreadySaved) return current
+        return current.map((brand) =>
+          brand.id === existingBrand.id ? { ...brand, colors: [...brand.colors, nextColor] } : brand,
+        )
+      }
+
+      return [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          name: result.brand,
+          source: result.sourceWebsite,
+          website: result.sourceWebsite,
+          notes: 'Created from web lookup result.',
+          colors: [nextColor],
+        },
+      ]
+    })
+    notify('Yarn color saved to library.')
+  }
+
   function replaceAllData(data: {
     projects: Project[]
     inventory: InventoryItem[]
@@ -404,6 +454,7 @@ function App() {
             <InventoryPage
               inventory={inventory}
               yarnBrands={yarnBrands}
+              onSaveWebYarnResult={saveWebYarnResult}
               onCreate={createInventoryItem}
               onUpdate={updateInventoryItem}
               onDelete={deleteInventoryItem}
@@ -411,7 +462,7 @@ function App() {
           )}
           {page === 'customers' && <CustomersPage customers={customers} projects={projects} setCustomers={setCustomers} onNotify={notify} />}
           {page === 'expenses' && <ExpensesPage expenses={expenses} setExpenses={setExpenses} onNotify={notify} />}
-          {page === 'yarnLibrary' && <YarnLibraryPage brands={yarnBrands} setBrands={setYarnBrands} onNotify={notify} />}
+          {page === 'yarnLibrary' && <YarnLibraryPage brands={yarnBrands} setBrands={setYarnBrands} onNotify={notify} onSaveWebYarnResult={saveWebYarnResult} />}
           {page === 'settings' && (
             <SettingsPage
               projects={projects}
@@ -442,10 +493,7 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
   return (
     <>
     <aside className="border-b border-white/10 bg-white/[0.03] p-4 backdrop-blur lg:min-h-screen lg:w-72 lg:border-b-0 lg:border-r lg:p-6">
-      <div className="mb-5">
-        <p className="text-xs uppercase tracking-[0.35em] text-teal-300">powered by Hyper J Ruggs</p>
-        <h1 className="mt-2 text-2xl font-semibold text-white">TuftTrack</h1>
-      </div>
+      <BrandMark className="mb-5" />
       <nav className="hidden grid-cols-2 gap-2 sm:grid lg:grid-cols-1">
         {links.map((link) => (
           <button
@@ -487,7 +535,7 @@ function Sidebar({ page, onChange, lowStockCount }: { page: Page; onChange: (pag
 
 function Header({ page }: { page: Page }) {
   const titles: Record<Page, string> = {
-    dashboard: 'Business overview',
+    dashboard: 'TuftTrack Dashboard',
     projects: 'Projects',
     inventory: 'Inventory',
     customers: 'Customers',
@@ -498,9 +546,22 @@ function Header({ page }: { page: Page }) {
 
   return (
     <header className="mb-6 flex flex-col gap-2">
-      <p className="text-sm text-slate-400">powered by Hyper J Ruggs</p>
+      <p className="text-sm text-slate-400">by Hyper J Ruggs</p>
       <h2 className="text-3xl font-semibold tracking-tight text-white">{titles[page]}</h2>
     </header>
+  )
+}
+
+function BrandMark({ className = '' }: { className?: string }) {
+  return (
+    <div className={className}>
+      <p className="text-xs uppercase tracking-[0.35em] text-teal-300">by Hyper J Ruggs</p>
+      <div className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 shadow-[0_0_28px_rgba(45,212,191,0.18),0_0_32px_rgba(236,72,153,0.08)]">
+        <h1 className="bg-gradient-to-r from-teal-200 via-white to-pink-200 bg-clip-text text-2xl font-semibold tracking-[0.03em] text-transparent drop-shadow-[0_0_14px_rgba(45,212,191,0.25)]">
+          TuftTrack
+        </h1>
+      </div>
+    </div>
   )
 }
 
@@ -799,12 +860,14 @@ function ProjectsPage({
 function InventoryPage({
   inventory,
   yarnBrands,
+  onSaveWebYarnResult,
   onCreate,
   onUpdate,
   onDelete,
 }: {
   inventory: InventoryItem[]
   yarnBrands: YarnBrand[]
+  onSaveWebYarnResult: (result: WebYarnResult) => void
   onCreate: (item: InventoryFormState) => void
   onUpdate: (id: string, item: InventoryFormState) => void
   onDelete: (id: string) => void
@@ -996,6 +1059,7 @@ function InventoryPage({
       </Panel>
       <Modal title={editingId ? 'Edit Inventory Item' : 'Add Inventory Item'} open={isModalOpen} onClose={closeModal}>
         <form className="space-y-4" onSubmit={submit}>
+          <WebYarnLookup onSave={onSaveWebYarnResult} compact />
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Yarn brand">
               <select value={selectedLibraryBrandId} onChange={(event) => chooseLibraryBrand(event.target.value)}>
@@ -1375,10 +1439,12 @@ function YarnLibraryPage({
   brands,
   setBrands,
   onNotify,
+  onSaveWebYarnResult,
 }: {
   brands: YarnBrand[]
   setBrands: Dispatch<SetStateAction<YarnBrand[]>>
   onNotify: (message: string) => void
+  onSaveWebYarnResult: (result: WebYarnResult) => void
 }) {
   const [brandName, setBrandName] = useState('')
   const [brandSource, setBrandSource] = useState('')
@@ -1463,6 +1529,8 @@ function YarnLibraryPage({
 
   return (
     <div className="space-y-6">
+      <WebYarnLookup onSave={onSaveWebYarnResult} />
+
       <Panel title={editingBrandId ? 'Edit yarn brand' : 'Add yarn brand'}>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Brand name"><input value={brandName} onChange={(event) => setBrandName(event.target.value)} /></Field>
@@ -1548,6 +1616,99 @@ function YarnLibraryPage({
   )
 }
 
+function WebYarnLookup({ onSave, compact = false }: { onSave: (result: WebYarnResult) => void; compact?: boolean }) {
+  const [brand, setBrand] = useState(starterYarnBrandNames[0])
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<WebYarnResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [message, setMessage] = useState('')
+
+  async function searchWeb() {
+    setIsSearching(true)
+    setMessage('')
+    try {
+      const response = await fetch(`/api/yarn-search?brand=${encodeURIComponent(brand)}&query=${encodeURIComponent(query)}`)
+      if (!response.ok) throw new Error('Search failed')
+      const data = (await response.json()) as { results: WebYarnResult[] }
+      setResults(data.results)
+      setMessage(data.results.length === 0 ? 'No sample matches found yet.' : '')
+    } catch {
+      setResults([])
+      setMessage('Web lookup is unavailable right now.')
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  return (
+    <Panel title="Web Yarn Lookup">
+      <div className="space-y-4">
+        <div className={`grid gap-3 ${compact ? 'md:grid-cols-[1fr_1fr_auto]' : 'md:grid-cols-[1fr_1fr_auto]'}`}>
+          <Field label="Brand">
+            <select value={brand} onChange={(event) => setBrand(event.target.value)}>
+              {starterYarnBrandNames.map((name) => <option key={name}>{name}</option>)}
+            </select>
+          </Field>
+          <Field label="Search brand/color">
+            <input
+              placeholder="Try teal, pink, 512..."
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </Field>
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={searchWeb}
+              disabled={isSearching}
+              className="w-full rounded-2xl bg-pink-300 px-4 py-3 font-medium text-slate-950 transition hover:bg-pink-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSearching ? 'Searching...' : 'Search Web'}
+            </button>
+          </div>
+        </div>
+
+        {message && <EmptyState message={message} />}
+
+        {results.length > 0 && (
+          <div className="grid gap-3">
+            {results.map((result) => (
+              <div
+                key={`${result.brand}-${result.colorName}-${result.sku}`}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="mt-1 h-8 w-8 shrink-0 rounded-full border border-white/20"
+                      style={{ backgroundColor: result.hexColor }}
+                    />
+                    <div>
+                      <p className="font-medium text-white">{result.colorName}</p>
+                      <p className="text-sm text-slate-300">{result.brand}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {result.sku ? `SKU ${result.sku} · ` : ''}
+                        {result.family} · {result.sourceWebsite}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onSave(result)}
+                    className="rounded-2xl bg-teal-300 px-4 py-2 font-medium text-slate-950 transition hover:bg-teal-200"
+                  >
+                    Save to Yarn Library
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Panel>
+  )
+}
+
 function SettingsPage({
   projects,
   inventory,
@@ -1591,7 +1752,7 @@ function SettingsPage({
 
   function exportJson() {
     downloadFile(
-      'hyper-j-ruggs-backup.json',
+      'tufttrack-backup.json',
       JSON.stringify({ projects, inventory, customers, expenses }, null, 2),
       'application/json',
     )
@@ -1648,6 +1809,15 @@ function SettingsPage({
 
   return (
     <div className="space-y-6">
+      <Panel title="Brand">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <BrandMark />
+          <p className="max-w-md text-sm text-slate-400">
+            TuftTrack keeps the same dark neon look while carrying the Hyper J Ruggs name as the studio behind the app.
+          </p>
+        </div>
+      </Panel>
+
       <Panel title="Backup & Export">
         <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -1975,7 +2145,7 @@ function Modal({
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#0d1020] p-4 shadow-[0_0_60px_rgba(45,212,191,0.18)] sm:p-6">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-teal-300">powered by Hyper J Ruggs</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-teal-300">by Hyper J Ruggs</p>
             <h3 className="mt-2 text-xl font-semibold text-white">{title}</h3>
           </div>
           <button
