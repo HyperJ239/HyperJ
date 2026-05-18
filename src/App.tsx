@@ -20,7 +20,9 @@ type InventoryItem = {
   id: string
   yarnColor: string
   brand: string
+  yarnLine: string
   colorCode: string
+  upc: string
   colorFamily: ColorFamily
   hexColor: string
   quantity: number
@@ -57,9 +59,16 @@ type ColorFamily = 'Red' | 'Orange' | 'Yellow' | 'Green' | 'Blue' | 'Purple' | '
 type YarnColor = {
   id: string
   name: string
+  line: string
   sku: string
+  upc: string
   family: ColorFamily
   hexColor: string
+  weight: string
+  yardage: string
+  fiber: string
+  store: string
+  website: string
   photo: string
   inStockQuantity: number
   notes: string
@@ -103,10 +112,10 @@ const sampleProjects: Project[] = [
 ]
 
 const sampleInventory: InventoryItem[] = [
-  { id: 'i1', yarnColor: 'Black', brand: 'I Love This Yarn', colorCode: '', colorFamily: 'Black', hexColor: '#111111', quantity: 8, lowStockThreshold: 6, cost: 14, supplier: 'Rug Supply Hub', notes: 'Primary outline color.' },
-  { id: 'i2', yarnColor: 'Teal', brand: 'Red Heart Super Saver', colorCode: '', colorFamily: 'Blue', hexColor: '#14b8a6', quantity: 4, lowStockThreshold: 6, cost: 15, supplier: 'Rug Supply Hub', notes: 'Signature accent color.' },
-  { id: 'i3', yarnColor: 'Hot Pink', brand: 'Caron One Pound', colorCode: '', colorFamily: 'Pink', hexColor: '#ec4899', quantity: 10, lowStockThreshold: 5, cost: 16, supplier: 'Color Loom', notes: 'Used for flame designs.' },
-  { id: 'i4', yarnColor: 'Purple', brand: 'Lion Brand', colorCode: '', colorFamily: 'Purple', hexColor: '#a855f7', quantity: 3, lowStockThreshold: 4, cost: 16, supplier: 'Color Loom', notes: 'Reorder soon.' },
+  { id: 'i1', yarnColor: 'Black', brand: 'I Love This Yarn', yarnLine: '', colorCode: '', upc: '', colorFamily: 'Black', hexColor: '#111111', quantity: 8, lowStockThreshold: 6, cost: 14, supplier: 'Rug Supply Hub', notes: 'Primary outline color.' },
+  { id: 'i2', yarnColor: 'Teal', brand: 'Red Heart Super Saver', yarnLine: '', colorCode: '', upc: '', colorFamily: 'Blue', hexColor: '#14b8a6', quantity: 4, lowStockThreshold: 6, cost: 15, supplier: 'Rug Supply Hub', notes: 'Signature accent color.' },
+  { id: 'i3', yarnColor: 'Hot Pink', brand: 'Caron One Pound', yarnLine: '', colorCode: '', upc: '', colorFamily: 'Pink', hexColor: '#ec4899', quantity: 10, lowStockThreshold: 5, cost: 16, supplier: 'Color Loom', notes: 'Used for flame designs.' },
+  { id: 'i4', yarnColor: 'Purple', brand: 'Lion Brand', yarnLine: '', colorCode: '', upc: '', colorFamily: 'Purple', hexColor: '#a855f7', quantity: 3, lowStockThreshold: 4, cost: 16, supplier: 'Color Loom', notes: 'Reorder soon.' },
 ]
 
 const sampleCustomers: Customer[] = [
@@ -162,7 +171,9 @@ const defaultProjectForm: ProjectFormState = {
 const defaultInventoryForm: InventoryFormState = {
   yarnColor: '',
   brand: '',
+  yarnLine: '',
   colorCode: '',
+  upc: '',
   colorFamily: 'Multi',
   hexColor: '#ffffff',
   quantity: 0,
@@ -235,7 +246,9 @@ function normalizeInventory(items: InventoryItem[]) {
     return {
       yarnColor: legacyItem.yarnColor ?? legacyItem.name ?? '',
       brand: legacyItem.brand ?? '',
+      yarnLine: legacyItem.yarnLine ?? '',
       colorCode: legacyItem.colorCode ?? '',
+      upc: legacyItem.upc ?? '',
       colorFamily: legacyItem.colorFamily ?? 'Multi',
       hexColor: legacyItem.hexColor ?? '#ffffff',
       quantity: legacyItem.quantity ?? 0,
@@ -253,6 +266,13 @@ function normalizeYarnBrands(brands: YarnBrand[]) {
     ...brand,
     colors: brand.colors.map((color) => ({
       ...color,
+      line: color.line ?? '',
+      upc: color.upc ?? '',
+      weight: color.weight ?? '',
+      yardage: color.yardage ?? '',
+      fiber: color.fiber ?? '',
+      store: color.store ?? brand.source ?? '',
+      website: color.website ?? brand.website ?? '',
       photo: color.photo ?? '',
       notes: color.notes ?? '',
     })),
@@ -354,9 +374,16 @@ function App() {
       const nextColor: YarnColor = {
         id: crypto.randomUUID(),
         name: result.colorName,
+        line: '',
         sku: result.sku,
+        upc: '',
         family: result.family,
         hexColor: result.hexColor,
+        weight: '',
+        yardage: '',
+        fiber: '',
+        store: result.sourceWebsite,
+        website: result.sourceWebsite,
         photo: '',
         inStockQuantity: 0,
         notes: `Saved from ${result.sourceWebsite}`,
@@ -905,7 +932,10 @@ function InventoryPage({
   const [lowStockOnly, setLowStockOnly] = useState(false)
   const [quantitySort, setQuantitySort] = useState<'asc' | 'desc'>('asc')
   const [selectedLibraryBrandId, setSelectedLibraryBrandId] = useState('')
+  const [selectedLibraryLine, setSelectedLibraryLine] = useState('')
   const [selectedLibraryColorId, setSelectedLibraryColorId] = useState('')
+  const [scanMessage, setScanMessage] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const lowStockItems = inventory.filter((item) => item.quantity <= item.lowStockThreshold)
   const visibleInventory = inventory
@@ -950,6 +980,7 @@ function InventoryPage({
     const matchedBrand = yarnBrands.find((brand) => brand.name === item.brand)
     const matchedColor = matchedBrand?.colors.find((color) => color.name === item.yarnColor)
     setSelectedLibraryBrandId(matchedBrand?.id ?? 'custom')
+    setSelectedLibraryLine(matchedColor?.line ?? '')
     setSelectedLibraryColorId(matchedColor?.id ?? 'custom')
     setIsModalOpen(true)
   }
@@ -959,6 +990,7 @@ function InventoryPage({
     setEditingId(null)
     setError('')
     setSelectedLibraryBrandId('')
+    setSelectedLibraryLine('')
     setSelectedLibraryColorId('')
     setIsModalOpen(true)
   }
@@ -968,11 +1000,14 @@ function InventoryPage({
     setEditingId(null)
     setError('')
     setSelectedLibraryBrandId('')
+    setSelectedLibraryLine('')
     setSelectedLibraryColorId('')
     setIsModalOpen(false)
   }
 
   const selectedLibraryBrand = yarnBrands.find((brand) => brand.id === selectedLibraryBrandId)
+  const selectedLineColors = selectedLibraryBrand?.colors.filter((color) => color.line === selectedLibraryLine) ?? []
+  const selectedLibraryLines = [...new Set(selectedLibraryBrand?.colors.map((color) => color.line).filter(Boolean) ?? [])]
 
   function applyLibraryColor(colorId: string) {
     setSelectedLibraryColorId(colorId)
@@ -982,25 +1017,55 @@ function InventoryPage({
     setForm((current) => ({
       ...current,
       brand: selectedLibraryBrand.name,
+      yarnLine: color.line,
       yarnColor: color.name,
       colorCode: color.sku,
+      upc: color.upc,
       colorFamily: color.family,
       hexColor: color.hexColor,
+      supplier: color.store || current.supplier,
+      notes: color.notes || current.notes,
     }))
   }
 
   function chooseLibraryBrand(brandId: string) {
     setSelectedLibraryBrandId(brandId)
+    setSelectedLibraryLine('')
     setSelectedLibraryColorId('')
     if (brandId === 'custom') {
-      setForm((current) => ({ ...current, brand: '', yarnColor: '', colorCode: '', colorFamily: 'Multi', hexColor: '#ffffff' }))
+      setForm((current) => ({ ...current, brand: '', yarnLine: '', yarnColor: '', colorCode: '', upc: '', colorFamily: 'Multi', hexColor: '#ffffff' }))
       return
     }
 
     const brand = yarnBrands.find((entry) => entry.id === brandId)
     if (brand) {
-      setForm((current) => ({ ...current, brand: brand.name, yarnColor: '', colorCode: '', colorFamily: 'Multi', hexColor: '#ffffff' }))
+      setForm((current) => ({ ...current, brand: brand.name, yarnLine: '', yarnColor: '', colorCode: '', upc: '', colorFamily: 'Multi', hexColor: '#ffffff' }))
     }
+  }
+
+  function handleBarcode(code: string) {
+    const match = yarnBrands.flatMap((brand) => brand.colors.map((color) => ({ brand, color }))).find(({ color }) => color.upc === code)
+    setForm((current) => ({ ...current, upc: code }))
+    if (!match) {
+      setScanMessage('No match found — add this yarn manually')
+      return
+    }
+    setSelectedLibraryBrandId(match.brand.id)
+    setSelectedLibraryLine(match.color.line)
+    setSelectedLibraryColorId(match.color.id)
+    setForm((current) => ({
+      ...current,
+      brand: match.brand.name,
+      yarnLine: match.color.line,
+      yarnColor: match.color.name,
+      colorCode: match.color.sku,
+      upc: match.color.upc,
+      colorFamily: match.color.family,
+      hexColor: match.color.hexColor,
+      supplier: match.color.store || current.supplier,
+      notes: match.color.notes || current.notes,
+    }))
+    setScanMessage('Yarn matched from barcode.')
   }
 
   return (
@@ -1104,11 +1169,17 @@ function InventoryPage({
                 <option value="custom">Custom Brand</option>
               </select>
             </Field>
+            <Field label="Yarn line">
+              <select value={selectedLibraryLine} onChange={(event) => { setSelectedLibraryLine(event.target.value); setSelectedLibraryColorId('') }} disabled={!selectedLibraryBrandId || selectedLibraryBrandId === 'custom'}>
+                <option value="">Select line</option>
+                {selectedLibraryLines.map((line) => <option key={line}>{line}</option>)}
+              </select>
+            </Field>
             <Field label="Yarn color">
               <select value={selectedLibraryColorId} onChange={(event) => applyLibraryColor(event.target.value)} disabled={!selectedLibraryBrandId}>
                 <option value="">Select color</option>
                 {selectedLibraryBrand && selectedLibraryBrand.colors.length === 0 && <option value="" disabled>Add color to Yarn Library.</option>}
-                {selectedLibraryBrand?.colors.map((color) => <option key={color.id} value={color.id}>{color.name}</option>)}
+                {(selectedLibraryLine ? selectedLineColors : selectedLibraryBrand?.colors ?? []).map((color) => <option key={color.id} value={color.id}>{color.name}</option>)}
                 {selectedLibraryBrandId && <option value="custom">Custom Color</option>}
               </select>
             </Field>
@@ -1126,6 +1197,7 @@ function InventoryPage({
               )}
             </div>
           )}
+          <Field label="Yarn line/name"><input value={form.yarnLine} onChange={(event) => setForm({ ...form, yarnLine: event.target.value })} /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Color family">
               <select value={form.colorFamily} onChange={(event) => setForm({ ...form, colorFamily: event.target.value as ColorFamily })}>
@@ -1135,6 +1207,11 @@ function InventoryPage({
             <Field label="Hex preview"><input type="color" value={form.hexColor} onChange={(event) => setForm({ ...form, hexColor: event.target.value })} /></Field>
           </div>
           <Field label="Color code / SKU"><input value={form.colorCode} onChange={(event) => setForm({ ...form, colorCode: event.target.value })} /></Field>
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+            <Field label="UPC / barcode"><input value={form.upc} onChange={(event) => setForm({ ...form, upc: event.target.value })} /></Field>
+            <div className="flex items-end"><button type="button" onClick={() => setScannerOpen(true)} className="rounded-2xl bg-purple-400/20 px-4 py-3 text-purple-100">Scan Barcode</button></div>
+          </div>
+          {scanMessage && <p className="text-sm text-teal-100">{scanMessage}</p>}
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Quantity"><input type="number" min="0" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })} /></Field>
             <Field label="Low stock number"><input type="number" min="0" value={form.lowStockThreshold} onChange={(event) => setForm({ ...form, lowStockThreshold: Number(event.target.value) })} /></Field>
@@ -1146,6 +1223,7 @@ function InventoryPage({
           <ModalActions onCancel={closeModal} />
         </form>
       </Modal>
+      <BarcodeScanner open={scannerOpen} onClose={() => setScannerOpen(false)} onScan={handleBarcode} />
       <FloatingActionButton label="Add inventory item" onClick={openCreateModal} />
     </div>
   )
@@ -1509,11 +1587,20 @@ function YarnLibraryPage({
   const [brandFilter, setBrandFilter] = useState('All')
   const [familyFilter, setFamilyFilter] = useState<'All' | ColorFamily>('All')
   const [activeColorBrandId, setActiveColorBrandId] = useState<string | null>(null)
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [scanMessage, setScanMessage] = useState('')
   const [colorForm, setColorForm] = useState<Omit<YarnColor, 'id'>>({
     name: '',
+    line: '',
     sku: '',
+    upc: '',
     family: 'Multi',
     hexColor: '#ffffff',
+    weight: '',
+    yardage: '',
+    fiber: '',
+    store: '',
+    website: '',
     photo: '',
     inStockQuantity: 0,
     notes: '',
@@ -1576,9 +1663,71 @@ function YarnLibraryPage({
         brand.id === brandId ? { ...brand, colors: [...brand.colors, { id: crypto.randomUUID(), ...colorForm }] } : brand,
       ),
     )
-    setColorForm({ name: '', sku: '', family: 'Multi', hexColor: '#ffffff', photo: '', inStockQuantity: 0, notes: '' })
+    setColorForm({ name: '', line: '', sku: '', upc: '', family: 'Multi', hexColor: '#ffffff', weight: '', yardage: '', fiber: '', store: '', website: '', photo: '', inStockQuantity: 0, notes: '' })
     setActiveColorBrandId(null)
     onNotify('Yarn color saved.')
+  }
+
+  function downloadYarnCsv(filename: string, rows: string[][]) {
+    const csv = rows.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exportYarnCsv() {
+    downloadYarnCsv('tufttrack-yarn-library.csv', [
+      ['brand', 'line', 'colorName', 'colorCode', 'upc', 'colorFamily', 'hex', 'weight', 'yardage', 'fiber', 'store', 'website', 'notes'],
+      ...brands.flatMap((brand) => brand.colors.map((color) => [brand.name, color.line, color.name, color.sku, color.upc, color.family, color.hexColor, color.weight, color.yardage, color.fiber, color.store, color.website, color.notes])),
+    ])
+  }
+
+  function downloadTemplate() {
+    downloadYarnCsv('tufttrack-yarn-template.csv', [
+      ['brand', 'line', 'colorName', 'colorCode', 'upc', 'colorFamily', 'hex', 'weight', 'yardage', 'fiber', 'store', 'website', 'notes'],
+      ['Lion Brand', 'Basic Stitch', 'Aqua', '123', '000000000000', 'Blue', '#22d3ee', '4', '185 yd', '100% acrylic', 'Lion Brand', 'https://example.com', 'Sample row'],
+    ])
+  }
+
+  async function importYarnCsv(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const lines = (await file.text()).split(/\r?\n/).filter(Boolean)
+    const rows = lines.slice(1).map((line) => line.split(',').map((cell) => cell.replace(/^"|"$/g, '')))
+    setBrands((current) => {
+      const next = [...current]
+      rows.forEach(([brandName, line, colorName, colorCode, upc, colorFamily, hex, weight, yardage, fiber, store, website, notes]) => {
+        let brand = next.find((entry) => entry.name === brandName)
+        if (!brand) {
+          brand = { id: crypto.randomUUID(), name: brandName, source: store, website, notes: '', colors: [] }
+          next.push(brand)
+        }
+        brand.colors.push({ id: crypto.randomUUID(), name: colorName, line, sku: colorCode, upc, family: (colorFamily as ColorFamily) || 'Multi', hexColor: hex || '#ffffff', weight, yardage, fiber, store, website, photo: '', inStockQuantity: 0, notes })
+      })
+      return [...next]
+    })
+    onNotify('Yarn CSV imported.')
+    event.target.value = ''
+  }
+
+  function handleBarcode(code: string) {
+    const match = brands.flatMap((brand) => brand.colors.map((color) => ({ brand, color }))).find(({ color }) => color.upc === code)
+    setColorForm((current) => ({ ...current, upc: code }))
+    if (!match) {
+      setScanMessage('No match found — add this yarn manually')
+      return
+    }
+    setActiveColorBrandId(match.brand.id)
+    const { id: _id, ...matchedColorForm } = match.color
+    setColorForm(({ photo, inStockQuantity }) => ({
+      ...matchedColorForm,
+      photo,
+      inStockQuantity,
+    }))
+    setScanMessage(`Match found: ${match.brand.name} ${match.color.name}`)
   }
 
   return (
@@ -1599,6 +1748,18 @@ function YarnLibraryPage({
         </div>
       </Panel>
       </section>
+      <Panel title="Yarn data tools">
+        <div className="flex flex-wrap gap-3">
+          <label className="cursor-pointer rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950">
+            Import CSV
+            <input className="hidden" type="file" accept=".csv,text/csv" onChange={importYarnCsv} />
+          </label>
+          <button onClick={exportYarnCsv} className="rounded-2xl border border-white/10 px-4 py-3 text-slate-200">Export yarn library CSV</button>
+          <button onClick={downloadTemplate} className="rounded-2xl border border-white/10 px-4 py-3 text-slate-200">Download CSV template</button>
+          <button onClick={() => setScannerOpen(true)} className="rounded-2xl bg-purple-400/20 px-4 py-3 text-purple-100">Scan Barcode</button>
+        </div>
+        {scanMessage && <p className="mt-3 text-sm text-teal-100">{scanMessage}</p>}
+      </Panel>
 
       <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-4 shadow-2xl shadow-black/10 sm:p-5">
         <div className="mb-4">
@@ -1641,13 +1802,20 @@ function YarnLibraryPage({
                 <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Color name"><input value={colorForm.name} onChange={(event) => setColorForm({ ...colorForm, name: event.target.value })} /></Field>
+                    <Field label="Yarn line/name"><input value={colorForm.line} onChange={(event) => setColorForm({ ...colorForm, line: event.target.value })} /></Field>
                     <Field label="Color code/SKU"><input value={colorForm.sku} onChange={(event) => setColorForm({ ...colorForm, sku: event.target.value })} /></Field>
+                    <Field label="UPC / barcode"><input value={colorForm.upc} onChange={(event) => setColorForm({ ...colorForm, upc: event.target.value })} /></Field>
                     <Field label="Color family">
                       <select value={colorForm.family} onChange={(event) => setColorForm({ ...colorForm, family: event.target.value as ColorFamily })}>
                         {colorFamilies.map((family) => <option key={family}>{family}</option>)}
                       </select>
                     </Field>
                     <Field label="Hex color preview"><input type="color" value={colorForm.hexColor} onChange={(event) => setColorForm({ ...colorForm, hexColor: event.target.value })} /></Field>
+                    <Field label="Weight/category"><input value={colorForm.weight} onChange={(event) => setColorForm({ ...colorForm, weight: event.target.value })} /></Field>
+                    <Field label="Yardage"><input value={colorForm.yardage} onChange={(event) => setColorForm({ ...colorForm, yardage: event.target.value })} /></Field>
+                    <Field label="Fiber content"><input value={colorForm.fiber} onChange={(event) => setColorForm({ ...colorForm, fiber: event.target.value })} /></Field>
+                    <Field label="Store/source"><input value={colorForm.store} onChange={(event) => setColorForm({ ...colorForm, store: event.target.value })} /></Field>
+                    <Field label="Website"><input value={colorForm.website} onChange={(event) => setColorForm({ ...colorForm, website: event.target.value })} /></Field>
                     <Field label="In stock quantity"><input type="number" value={colorForm.inStockQuantity} onChange={(event) => setColorForm({ ...colorForm, inStockQuantity: Number(event.target.value) })} /></Field>
                     <Field label="Photo upload placeholder"><input placeholder="Photo upload later" disabled /></Field>
                   </div>
@@ -1676,12 +1844,14 @@ function YarnLibraryPage({
                 </div>
               </div>
               <p className="mt-3 text-sm text-slate-400">SKU {color.sku || '—'} · In stock {color.inStockQuantity}</p>
+              <p className="mt-1 text-xs text-slate-500">{color.line || 'No line'} · UPC {color.upc || '—'} · {color.weight || 'No weight'} · {color.yardage || 'No yardage'}</p>
               {color.notes && <p className="mt-2 text-sm text-slate-300">{color.notes}</p>}
               </div>
             </div>
           ))}
         </div>
       </Panel>
+      <BarcodeScanner open={scannerOpen} onClose={() => setScannerOpen(false)} onScan={handleBarcode} />
     </div>
   )
 }
@@ -2249,6 +2419,62 @@ function ModalActions({ onCancel }: { onCancel: () => void }) {
         Save
       </button>
     </div>
+  )
+}
+
+function BarcodeScanner({ open, onClose, onScan }: { open: boolean; onClose: () => void; onScan: (code: string) => void }) {
+  const [scanner, setScanner] = useState<{ stop: () => Promise<void> } | null>(null)
+  const [message, setMessage] = useState('Camera permission is required to scan UPC barcodes.')
+  const scannerId = 'tufttrack-barcode-scanner'
+
+  async function startScan() {
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode')
+      const nextScanner = new Html5Qrcode(scannerId)
+      setScanner(nextScanner)
+      await nextScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 280, height: 160 } },
+        async (decodedText) => {
+          onScan(decodedText)
+          setMessage(`Scanned ${decodedText}`)
+          await nextScanner.stop()
+          setScanner(null)
+        },
+        () => {},
+      )
+      setMessage('Point the camera at a UPC barcode.')
+    } catch {
+      setMessage('Unable to start camera. Check permission and use HTTPS on mobile.')
+    }
+  }
+
+  async function stopScan() {
+    if (!scanner) return
+    await scanner.stop()
+    setScanner(null)
+    setMessage('Scan stopped.')
+  }
+
+  async function close() {
+    if (scanner) await scanner.stop()
+    setScanner(null)
+    onClose()
+  }
+
+  if (!open) return null
+
+  return (
+    <Modal title="Scan Barcode" open={open} onClose={() => void close()}>
+      <div className="space-y-4">
+        <div id={scannerId} className="overflow-hidden rounded-2xl border border-white/10 bg-black" />
+        <p className="text-sm text-slate-300">{message}</p>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" onClick={() => void startScan()} className="rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950">Start Scan</button>
+          <button type="button" onClick={() => void stopScan()} className="rounded-2xl border border-white/10 px-4 py-3 text-slate-200">Stop Scan</button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 
