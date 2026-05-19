@@ -2,7 +2,19 @@
 import type { ChangeEvent, Dispatch, FormEvent, ReactElement, ReactNode, SetStateAction } from 'react'
 import { masterYarnDatabase } from './masterYarnDatabase'
 
-type ProjectStatus = 'Quote' | 'Approved' | 'Tufting' | 'Gluing' | 'Finished' | 'Picked Up'
+type ProjectStatus =
+  | 'Quote'
+  | 'Approved'
+  | 'Designing'
+  | 'Tracing'
+  | 'Tufting'
+  | 'Gluing'
+  | 'Trimming'
+  | 'Carving'
+  | 'Backing'
+  | 'Finished'
+  | 'Picked Up'
+  | 'Delivered'
 
 type Project = {
   id: string
@@ -102,7 +114,20 @@ type CustomerFormState = Omit<Customer, 'id'>
 type ExpenseFormState = Omit<Expense, 'id'>
 type Accent = 'teal' | 'purple' | 'pink'
 
-const projectStatuses: ProjectStatus[] = ['Quote', 'Approved', 'Tufting', 'Gluing', 'Finished', 'Picked Up']
+const projectStatuses: ProjectStatus[] = [
+  'Quote',
+  'Approved',
+  'Designing',
+  'Tracing',
+  'Tufting',
+  'Gluing',
+  'Trimming',
+  'Carving',
+  'Backing',
+  'Finished',
+  'Picked Up',
+  'Delivered',
+]
 const expenseCategories: ExpenseCategory[] = ['Yarn', 'Glue', 'Backing', 'Tools', 'Shipping', 'Booth/Event Fee', 'Other']
 const colorFamilies: ColorFamily[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Black', 'White', 'Gray', 'Neon', 'Multi']
 const starterYarnBrandNames = ['I Love This Yarn', 'Red Heart Super Saver', 'Caron One Pound', 'Loops & Threads', 'Big Twist', 'Mainstays', 'Lion Brand', 'Premier Yarns', 'Bernat']
@@ -272,8 +297,11 @@ function normalizeProjects(projects: Project[]) {
       photos?: string[]
     }
 
+    const safeStatus = projectStatuses.includes(legacyProject.status) ? legacyProject.status : 'Quote'
+
     return {
       ...project,
+      status: safeStatus,
       size: legacyProject.size ?? '',
       depositPaid: legacyProject.depositPaid ?? 0,
       notes: legacyProject.notes ?? '',
@@ -473,8 +501,9 @@ function App() {
   }
 
   const lowStockItems = inventory.filter((item) => item.quantity <= item.lowStockThreshold)
-  const activeProjects = projects.filter((project) => project.status !== 'Picked Up')
-  const finishedProjects = projects.filter((project) => project.status === 'Finished').length
+  const completedStatuses: ProjectStatus[] = ['Picked Up', 'Delivered']
+  const activeProjects = projects.filter((project) => !completedStatuses.includes(project.status))
+  const finishedProjects = projects.filter((project) => ['Finished', 'Picked Up', 'Delivered'].includes(project.status)).length
   const totalPipelineValue = projects.reduce((sum, project) => sum + project.price, 0)
   const depositsCollected = projects.reduce((sum, project) => sum + project.depositPaid, 0)
   const balanceRemaining = projects.reduce((sum, project) => sum + remainingBalance(project), 0)
@@ -786,7 +815,7 @@ function ProjectsPage({
   }
 
   function isOverdue(project: Project) {
-    if (!project.dueDate || project.status === 'Finished' || project.status === 'Picked Up') return false
+    if (!project.dueDate || ['Finished', 'Picked Up', 'Delivered'].includes(project.status)) return false
     return new Date(project.dueDate) < new Date(new Date().toDateString())
   }
 
@@ -2318,6 +2347,7 @@ function ProjectDetailPage({
           <DetailStat label="Deposit paid" value={currency(project.depositPaid)} />
           <DetailStat label="Balance remaining" value={currency(remainingBalance(project))} />
         </div>
+        <ProjectProgress status={project.status} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -2411,6 +2441,36 @@ function DetailStat({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <p className="text-sm text-slate-400">{label}</p>
       <p className="mt-2 text-lg font-semibold text-white">{value}</p>
+    </div>
+  )
+}
+
+function ProjectProgress({ status }: { status: ProjectStatus }) {
+  const currentIndex = projectStatuses.indexOf(status)
+
+  return (
+    <div className="mt-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-sm text-slate-400">Workflow progress</p>
+        <p className="text-xs text-teal-100">Step {currentIndex + 1} of {projectStatuses.length}</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        {projectStatuses.map((step, index) => {
+          const complete = index <= currentIndex
+          return (
+            <div
+              key={step}
+              className={`rounded-2xl border px-3 py-2 text-xs ${
+                complete
+                  ? `${statusStyle(step)} shadow-[0_0_18px_rgba(45,212,191,0.08)]`
+                  : 'border-white/10 bg-white/[0.03] text-slate-500'
+              }`}
+            >
+              {step}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -2609,17 +2669,27 @@ function Toast({ message }: { message: string }) {
   )
 }
 
-function StatusPill({ status }: { status: ProjectStatus }) {
+function statusStyle(status: ProjectStatus) {
   const styles: Record<ProjectStatus, string> = {
-    Quote: 'bg-slate-400/15 text-slate-200',
-    Approved: 'bg-teal-400/15 text-teal-100',
-    Tufting: 'bg-purple-400/15 text-purple-100',
-    Gluing: 'bg-fuchsia-400/15 text-fuchsia-100',
-    Finished: 'bg-emerald-400/15 text-emerald-100',
-    'Picked Up': 'bg-pink-400/15 text-pink-100',
+    Quote: 'border-slate-300/20 bg-slate-400/15 text-slate-200',
+    Approved: 'border-blue-300/20 bg-blue-400/15 text-blue-100',
+    Designing: 'border-purple-300/20 bg-purple-400/15 text-purple-100',
+    Tracing: 'border-cyan-300/20 bg-cyan-400/15 text-cyan-100',
+    Tufting: 'border-teal-300/20 bg-teal-400/15 text-teal-100',
+    Gluing: 'border-orange-300/20 bg-orange-400/15 text-orange-100',
+    Trimming: 'border-yellow-300/20 bg-yellow-400/15 text-yellow-100',
+    Carving: 'border-pink-300/20 bg-pink-400/15 text-pink-100',
+    Backing: 'border-indigo-300/20 bg-indigo-400/15 text-indigo-100',
+    Finished: 'border-green-300/20 bg-green-400/15 text-green-100',
+    'Picked Up': 'border-emerald-300/20 bg-emerald-400/15 text-emerald-100',
+    Delivered: 'border-lime-300/20 bg-lime-400/15 text-lime-100',
   }
 
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs ${styles[status]}`}>{status}</span>
+  return styles[status]
+}
+
+function StatusPill({ status }: { status: ProjectStatus }) {
+  return <span className={`inline-flex rounded-full border px-3 py-1 text-xs ${statusStyle(status)}`}>{status}</span>
 }
 
 export default App
