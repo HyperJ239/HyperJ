@@ -99,11 +99,19 @@ type YarnBrand = {
 
 type WebYarnResult = {
   brand: string
+  line?: string
   colorName: string
   sku: string
+  upc?: string
   family: ColorFamily
   hexColor: string
+  weight?: string
+  yardage?: string
+  fiber?: string
+  quantity?: number
+  reorderLevel?: number
   sourceWebsite: string
+  notes?: string
 }
 
 type Page = 'dashboard' | 'projects' | 'inventory' | 'customers' | 'expenses' | 'yarnLibrary' | 'settings'
@@ -445,20 +453,20 @@ function App() {
       const nextColor: YarnColor = {
         id: crypto.randomUUID(),
         name: result.colorName,
-        line: '',
+        line: result.line ?? '',
         sku: result.sku,
-        upc: '',
+        upc: result.upc ?? '',
         family: result.family,
         hexColor: result.hexColor,
-        weight: '',
-        yardage: '',
-        fiber: '',
+        weight: result.weight ?? '',
+        yardage: result.yardage ?? '',
+        fiber: result.fiber ?? '',
         store: result.sourceWebsite,
         website: result.sourceWebsite,
         photo: '',
-        inStockQuantity: 0,
-        reorderLevel: 0,
-        notes: `Saved from ${result.sourceWebsite}`,
+        inStockQuantity: result.quantity ?? 0,
+        reorderLevel: result.reorderLevel ?? 0,
+        notes: result.notes ?? `Saved from ${result.sourceWebsite}`,
       }
 
       if (existingBrand) {
@@ -1975,7 +1983,7 @@ function WebYarnLookup({ onSave, compact = false }: { onSave: (result: WebYarnRe
       if (!response.ok) throw new Error('Search failed')
       const data = (await response.json()) as { results: WebYarnResult[] }
       setResults(data.results)
-      setMessage(data.results.length === 0 ? 'No sample matches found yet.' : '')
+      setMessage(data.results.length === 0 ? 'No yarn database matches found yet.' : '')
     } catch {
       setResults([])
       setMessage('Web lookup is unavailable right now.')
@@ -1985,7 +1993,7 @@ function WebYarnLookup({ onSave, compact = false }: { onSave: (result: WebYarnRe
   }
 
   return (
-    <Panel title="Web Yarn Lookup">
+    <Panel title="Yarn Database Lookup">
       <div className="space-y-4">
         <div className={`grid gap-3 ${compact ? 'md:grid-cols-[1fr_1fr_auto]' : 'md:grid-cols-[1fr_1fr_auto]'}`}>
           <Field label="Brand">
@@ -2007,7 +2015,7 @@ function WebYarnLookup({ onSave, compact = false }: { onSave: (result: WebYarnRe
               disabled={isSearching}
               className="w-full rounded-2xl bg-pink-300 px-4 py-3 font-medium text-slate-950 transition hover:bg-pink-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSearching ? 'Searching...' : 'Search Web'}
+              {isSearching ? 'Searching...' : 'Search Database'}
             </button>
           </div>
         </div>
@@ -2031,8 +2039,10 @@ function WebYarnLookup({ onSave, compact = false }: { onSave: (result: WebYarnRe
                       <p className="font-medium text-white">{result.colorName}</p>
                       <p className="text-sm text-slate-300">{result.brand}</p>
                       <p className="mt-1 text-xs text-slate-400">
+                        {result.line ? `${result.line} · ` : ''}
                         {result.sku ? `SKU ${result.sku} · ` : ''}
-                        {result.family} · {result.sourceWebsite}
+                        {result.upc ? `UPC ${result.upc} · ` : ''}
+                        {result.family} · {result.weight || 'No weight'} · {result.fiber || 'No fiber'}
                       </p>
                     </div>
                   </div>

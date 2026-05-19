@@ -1,33 +1,54 @@
-﻿import { defineConfig } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import yarnDatabase from './api/master-yarn-database.json' with { type: 'json' }
 
-const mockYarnSearchResults = [
-  { brand: 'I Love This Yarn', colorName: 'Hot Rose', sku: '14', family: 'Pink', hexColor: '#ec4899', sourceWebsite: 'hobbylobby.com' },
-  { brand: 'Red Heart Super Saver', colorName: 'Turqua', sku: '512', family: 'Blue', hexColor: '#14b8a6', sourceWebsite: 'yarnspirations.com' },
-  { brand: 'Caron One Pound', colorName: 'Lilac', sku: '577', family: 'Purple', hexColor: '#c084fc', sourceWebsite: 'yarnspirations.com' },
-  { brand: 'Loops & Threads', colorName: 'Neon Pink', sku: '106', family: 'Neon', hexColor: '#ff3eb5', sourceWebsite: 'michaels.com' },
-  { brand: 'Big Twist', colorName: 'Varsity Red', sku: '112', family: 'Red', hexColor: '#dc2626', sourceWebsite: 'joann.com' },
-  { brand: 'Mainstays', colorName: 'Soft Silver', sku: 'MS-204', family: 'Gray', hexColor: '#cbd5e1', sourceWebsite: 'walmart.com' },
-  { brand: 'Lion Brand', colorName: 'Lemon', sku: '158', family: 'Yellow', hexColor: '#fde047', sourceWebsite: 'lionbrand.com' },
-  { brand: 'Premier Yarns', colorName: 'Parrot Green', sku: '1177', family: 'Green', hexColor: '#22c55e', sourceWebsite: 'premieryarns.com' },
-  { brand: 'Bernat', colorName: 'Aqua', sku: '10203', family: 'Blue', hexColor: '#22d3ee', sourceWebsite: 'yarnspirations.com' },
-]
+function toColorFamily(value = '', colorName = '') {
+  const combined = `${value} ${colorName}`.toLowerCase()
+  if (combined.includes('red')) return 'Red'
+  if (combined.includes('orange')) return 'Orange'
+  if (combined.includes('yellow') || combined.includes('gold')) return 'Yellow'
+  if (combined.includes('green')) return 'Green'
+  if (combined.includes('blue') || combined.includes('teal') || combined.includes('aqua')) return 'Blue'
+  if (combined.includes('purple') || combined.includes('violet') || combined.includes('lilac')) return 'Purple'
+  if (combined.includes('pink') || combined.includes('rose')) return 'Pink'
+  if (combined.includes('brown') || combined.includes('tan') || combined.includes('aran')) return 'Brown'
+  if (combined.includes('black')) return 'Black'
+  if (combined.includes('white')) return 'White'
+  if (combined.includes('gray') || combined.includes('grey') || combined.includes('silver')) return 'Gray'
+  if (combined.includes('neon')) return 'Neon'
+  return 'Multi'
+}
 
 function yarnSearchMiddleware(request: { url?: string }, response: { setHeader: (name: string, value: string) => void; end: (body: string) => void }) {
   const url = new URL(request.url ?? '', 'http://localhost')
   const brand = url.searchParams.get('brand')?.toLowerCase() ?? ''
   const query = url.searchParams.get('query')?.toLowerCase() ?? ''
-  const results = mockYarnSearchResults.filter((result) => {
-    const matchesBrand = !brand || result.brand.toLowerCase() === brand
-    const matchesQuery =
-      !query ||
-      result.colorName.toLowerCase().includes(query) ||
-      result.sku.toLowerCase().includes(query) ||
-      result.family.toLowerCase().includes(query)
-    return matchesBrand && matchesQuery
-  })
+  const results = yarnDatabase
+    .filter((row) => {
+      const searchable = [row.brand, row.line, row.colorName, row.color_name, row.sku, row.barcode, row.colorFamily, row.weight, row.fiber]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return (!brand || row.brand.toLowerCase() === brand) && (!query || searchable.includes(query))
+    })
+    .map((row) => ({
+      brand: row.brand,
+      line: row.line,
+      colorName: row.colorName || row.color_name,
+      sku: row.sku,
+      upc: row.barcode,
+      family: toColorFamily(row.colorFamily, row.colorName || row.color_name),
+      hexColor: row.hex || '#ffffff',
+      weight: row.weight,
+      yardage: 'yardage' in row ? row.yardage : '',
+      fiber: row.fiber,
+      quantity: row.quantity,
+      reorderLevel: row.reorderLevel,
+      sourceWebsite: row.sourceUrl,
+      notes: row.notes,
+    }))
 
   response.setHeader('Content-Type', 'application/json')
   response.end(JSON.stringify({ results }))
@@ -36,7 +57,7 @@ function yarnSearchMiddleware(request: { url?: string }, response: { setHeader: 
 export default defineConfig({
   plugins: [
     {
-      name: 'mock-yarn-search-api',
+      name: 'yarn-database-search-api',
       configureServer(server) {
         server.middlewares.use('/api/yarn-search', yarnSearchMiddleware)
       },
