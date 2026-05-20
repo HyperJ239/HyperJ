@@ -27,7 +27,7 @@ function toResult(row) {
     brand: row.brand ?? '',
     line: row.line ?? '',
     colorName: row.colorName ?? row.color_name ?? '',
-    sku: row.sku ?? '',
+    sku: row.sku ?? row.colorNumber ?? '',
     upc: row.barcode ?? '',
     family: toColorFamily(row.colorFamily, row.colorName ?? row.color_name),
     hexColor: row.hex ?? '#ffffff',
@@ -36,8 +36,8 @@ function toResult(row) {
     fiber: row.fiber ?? '',
     quantity: row.quantity ?? 0,
     reorderLevel: row.reorderLevel ?? 0,
-    sourceWebsite: row.sourceUrl ?? '',
-    notes: row.notes ?? '',
+    sourceWebsite: row.sourceUrl ?? row.supplierUrl ?? row.officialSource ?? '',
+    notes: [row.notes, row.skeinSize ? `Skein size: ${row.skeinSize}` : ''].filter(Boolean).join(' · '),
   }
 }
 
@@ -54,6 +54,7 @@ export default function handler(request, response) {
         row.colorName,
         row.color_name,
         row.sku,
+        row.colorNumber,
         row.barcode,
         row.colorFamily,
         row.weight,

@@ -27,7 +27,7 @@ function yarnSearchMiddleware(request: { url?: string }, response: { setHeader: 
   const query = url.searchParams.get('query')?.toLowerCase() ?? ''
   const results = yarnDatabase
     .filter((row) => {
-      const searchable = [row.brand, row.line, row.colorName, row.color_name, row.sku, row.barcode, row.colorFamily, row.weight, row.fiber]
+      const searchable = [row.brand, row.line, row.colorName, row.color_name, row.sku, 'colorNumber' in row ? row.colorNumber : '', row.barcode, row.colorFamily, row.weight, row.fiber]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -37,7 +37,7 @@ function yarnSearchMiddleware(request: { url?: string }, response: { setHeader: 
       brand: row.brand,
       line: row.line,
       colorName: row.colorName || row.color_name,
-      sku: row.sku,
+      sku: row.sku ?? ('colorNumber' in row ? row.colorNumber : ''),
       upc: row.barcode,
       family: toColorFamily(row.colorFamily, row.colorName || row.color_name),
       hexColor: row.hex || '#ffffff',
@@ -46,8 +46,8 @@ function yarnSearchMiddleware(request: { url?: string }, response: { setHeader: 
       fiber: row.fiber,
       quantity: row.quantity,
       reorderLevel: row.reorderLevel,
-      sourceWebsite: row.sourceUrl,
-      notes: row.notes,
+      sourceWebsite: row.sourceUrl ?? ('supplierUrl' in row ? row.supplierUrl : '') ?? ('officialSource' in row ? row.officialSource : ''),
+      notes: [row.notes, 'skeinSize' in row && row.skeinSize ? `Skein size: ${row.skeinSize}` : ''].filter(Boolean).join(' · '),
     }))
 
   response.setHeader('Content-Type', 'application/json')

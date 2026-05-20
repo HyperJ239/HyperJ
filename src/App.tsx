@@ -204,7 +204,7 @@ function buildStarterYarnBrands(): YarnBrand[] {
       id: String(row.id),
       name: String(row.colorName || row.color_name || ''),
       line: String(row.line ?? ''),
-      sku: String(row.sku ?? ''),
+      sku: String(row.sku ?? row.colorNumber ?? ''),
       upc: String(row.barcode ?? ''),
       family: toColorFamily(String(row.colorFamily ?? ''), String(row.colorName ?? '')),
       hexColor: String(row.hex || '#ffffff'),
@@ -212,11 +212,11 @@ function buildStarterYarnBrands(): YarnBrand[] {
       yardage: String(row.yardage ?? ''),
       fiber: String(row.fiber ?? ''),
       store: String(row.store ?? brandName),
-      website: String(row.sourceUrl ?? ''),
-      photo: String(row.swatchImageUrl ?? ''),
+      website: String(row.sourceUrl ?? row.supplierUrl ?? row.officialSource ?? ''),
+      photo: String(row.swatchImageUrl ?? row.imageUrl ?? ''),
       inStockQuantity: Number(row.quantity ?? 0),
       reorderLevel: Number(row.reorderLevel ?? 0),
-      notes: String(row.notes ?? ''),
+      notes: [row.notes, row.skeinSize ? `Skein size: ${row.skeinSize}` : ''].filter(Boolean).join(' · '),
     })
   })
 
