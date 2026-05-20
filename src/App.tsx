@@ -976,8 +976,8 @@ function ProjectsPage({
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Price"><input type="number" min="0" value={form.price} onChange={(event) => updateForm('price', Number(event.target.value))} /></Field>
-            <Field label="Deposit paid"><input type="number" min="0" value={form.depositPaid} onChange={(event) => updateForm('depositPaid', Number(event.target.value))} /></Field>
+            <Field label="Price"><NumberInput money value={form.price} onChange={(value) => updateForm('price', value)} /></Field>
+            <Field label="Deposit paid"><NumberInput money value={form.depositPaid} onChange={(value) => updateForm('depositPaid', value)} /></Field>
             <Field label="Due date"><input type="date" value={form.dueDate} onChange={(event) => updateForm('dueDate', event.target.value)} /></Field>
           </div>
           <Field label="Notes"><textarea rows={4} value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} /></Field>
@@ -1294,9 +1294,9 @@ function InventoryPage({
           </div>
           {scanMessage && <p className="text-sm text-teal-100">{scanMessage}</p>}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Quantity"><input type="number" min="0" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: Number(event.target.value) })} /></Field>
-            <Field label="Low stock number"><input type="number" min="0" value={form.lowStockThreshold} onChange={(event) => setForm({ ...form, lowStockThreshold: Number(event.target.value) })} /></Field>
-            <Field label="Cost"><input type="number" min="0" value={form.cost} onChange={(event) => setForm({ ...form, cost: Number(event.target.value) })} /></Field>
+            <Field label="Quantity"><NumberInput value={form.quantity} onChange={(value) => setForm({ ...form, quantity: value })} /></Field>
+            <Field label="Low stock number"><NumberInput value={form.lowStockThreshold} onChange={(value) => setForm({ ...form, lowStockThreshold: value })} /></Field>
+            <Field label="Cost"><NumberInput money value={form.cost} onChange={(value) => setForm({ ...form, cost: value })} /></Field>
           </div>
           <Field label="Supplier"><input value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} /></Field>
           <Field label="Notes"><textarea rows={4} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
@@ -1634,7 +1634,7 @@ function ExpensesPage({
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Cost"><input type="number" min="0" value={form.cost} onChange={(event) => setForm({ ...form, cost: Number(event.target.value) })} /></Field>
+            <Field label="Cost"><NumberInput money value={form.cost} onChange={(value) => setForm({ ...form, cost: value })} /></Field>
             <Field label="Date"><input type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></Field>
             <Field label="Supplier"><input value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} /></Field>
           </div>
@@ -1905,8 +1905,8 @@ function YarnLibraryPage({
                     <Field label="Fiber content"><input value={colorForm.fiber} onChange={(event) => setColorForm({ ...colorForm, fiber: event.target.value })} /></Field>
                     <Field label="Store/source"><input value={colorForm.store} onChange={(event) => setColorForm({ ...colorForm, store: event.target.value })} /></Field>
                     <Field label="Website"><input value={colorForm.website} onChange={(event) => setColorForm({ ...colorForm, website: event.target.value })} /></Field>
-                    <Field label="Reorder level"><input type="number" value={colorForm.reorderLevel} onChange={(event) => setColorForm({ ...colorForm, reorderLevel: Number(event.target.value) })} /></Field>
-                    <Field label="In stock quantity"><input type="number" value={colorForm.inStockQuantity} onChange={(event) => setColorForm({ ...colorForm, inStockQuantity: Number(event.target.value) })} /></Field>
+                    <Field label="Reorder level"><NumberInput value={colorForm.reorderLevel} onChange={(value) => setColorForm({ ...colorForm, reorderLevel: value })} /></Field>
+                    <Field label="In stock quantity"><NumberInput value={colorForm.inStockQuantity} onChange={(value) => setColorForm({ ...colorForm, inStockQuantity: value })} /></Field>
                     <Field label="Photo upload placeholder"><input placeholder="Photo upload later" disabled /></Field>
                   </div>
                   <Field label="Notes"><textarea rows={3} value={colorForm.notes} onChange={(event) => setColorForm({ ...colorForm, notes: event.target.value })} /></Field>
@@ -2433,8 +2433,8 @@ function ProjectDetailPage({
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Price"><input type="number" min="0" value={form.price} onChange={(event) => setForm({ ...form, price: Number(event.target.value) })} /></Field>
-            <Field label="Deposit paid"><input type="number" min="0" value={form.depositPaid} onChange={(event) => setForm({ ...form, depositPaid: Number(event.target.value) })} /></Field>
+            <Field label="Price"><NumberInput money value={form.price} onChange={(value) => setForm({ ...form, price: value })} /></Field>
+            <Field label="Deposit paid"><NumberInput money value={form.depositPaid} onChange={(value) => setForm({ ...form, depositPaid: value })} /></Field>
             <Field label="Due date"><input type="date" value={form.dueDate} onChange={(event) => setForm({ ...form, dueDate: event.target.value })} /></Field>
           </div>
           <Field label="Notes"><textarea rows={4} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
@@ -2509,6 +2509,59 @@ function Field({ label, children }: { label: string; children: ReactElement }) {
       <span className="mb-2 block">{label}</span>
       {children}
     </label>
+  )
+}
+
+function cleanNumberInput(value: string, allowDecimal: boolean) {
+  let cleaned = value.replace(/[^\d.]/g, '')
+  if (!allowDecimal) cleaned = cleaned.replace(/\./g, '')
+
+  if (allowDecimal) {
+    const [whole = '', ...decimalParts] = cleaned.split('.')
+    const decimal = decimalParts.join('')
+    const trimmedWhole = whole.replace(/^0+(?=\d)/, '')
+    if (cleaned.includes('.')) return `${trimmedWhole || '0'}.${decimal}`
+    return trimmedWhole
+  }
+
+  return cleaned.replace(/^0+(?=\d)/, '')
+}
+
+function NumberInput({
+  value,
+  onChange,
+  money = false,
+}: {
+  value: number
+  onChange: (value: number) => void
+  money?: boolean
+}) {
+  const [displayValue, setDisplayValue] = useState(value === 0 ? '' : String(value))
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    if (!focused) setDisplayValue(value === 0 ? '' : String(value))
+  }, [focused, value])
+
+  return (
+    <input
+      type="text"
+      inputMode={money ? 'decimal' : 'numeric'}
+      value={displayValue}
+      onFocus={() => {
+        setFocused(true)
+        if (displayValue === '0') setDisplayValue('')
+      }}
+      onBlur={() => {
+        setFocused(false)
+        if (displayValue === '') onChange(0)
+      }}
+      onChange={(event) => {
+        const nextValue = cleanNumberInput(event.target.value, money)
+        setDisplayValue(nextValue)
+        onChange(nextValue === '' ? 0 : Number(nextValue))
+      }}
+    />
   )
 }
 
