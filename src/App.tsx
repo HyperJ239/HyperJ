@@ -86,6 +86,24 @@ type YarnColor = {
   inStockQuantity: number
   reorderLevel: number
   notes: string
+  materialBlend?: string
+  skeinSize?: string
+  yarnForm?: string
+  packageShape?: string
+  centerPull?: string
+  coneWeight?: string
+  coreType?: string
+  plies?: string
+  texture?: string
+  finish?: string
+  glowUV?: string
+  neon?: string
+  tuftingRecommended?: string
+  projectUsage?: string
+  dyeLot?: string
+  storageLocation?: string
+  appCategory?: string
+  lastUpdated?: string
 }
 
 type YarnBrand = {
@@ -112,6 +130,24 @@ type WebYarnResult = {
   reorderLevel?: number
   sourceWebsite: string
   notes?: string
+  materialBlend?: string
+  skeinSize?: string
+  yarnForm?: string
+  packageShape?: string
+  centerPull?: string
+  coneWeight?: string
+  coreType?: string
+  plies?: string
+  texture?: string
+  finish?: string
+  glowUV?: string
+  neon?: string
+  tuftingRecommended?: string
+  projectUsage?: string
+  dyeLot?: string
+  storageLocation?: string
+  appCategory?: string
+  lastUpdated?: string
 }
 
 type Page = 'dashboard' | 'projects' | 'inventory' | 'customers' | 'expenses' | 'yarnLibrary' | 'settings'
@@ -467,6 +503,24 @@ function App() {
         inStockQuantity: result.quantity ?? 0,
         reorderLevel: result.reorderLevel ?? 0,
         notes: result.notes ?? `Saved from ${result.sourceWebsite}`,
+        materialBlend: result.materialBlend ?? '',
+        skeinSize: result.skeinSize ?? '',
+        yarnForm: result.yarnForm ?? '',
+        packageShape: result.packageShape ?? '',
+        centerPull: result.centerPull ?? '',
+        coneWeight: result.coneWeight ?? '',
+        coreType: result.coreType ?? '',
+        plies: result.plies ?? '',
+        texture: result.texture ?? '',
+        finish: result.finish ?? '',
+        glowUV: result.glowUV ?? '',
+        neon: result.neon ?? '',
+        tuftingRecommended: result.tuftingRecommended ?? '',
+        projectUsage: result.projectUsage ?? '',
+        dyeLot: result.dyeLot ?? '',
+        storageLocation: result.storageLocation ?? '',
+        appCategory: result.appCategory ?? '',
+        lastUpdated: result.lastUpdated ?? '',
       }
 
       if (existingBrand) {
