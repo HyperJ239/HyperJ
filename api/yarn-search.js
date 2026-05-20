@@ -1,4 +1,9 @@
-import yarnDatabase from './master-yarn-database.json' assert { type: 'json' }
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const yarnDatabase = JSON.parse(readFileSync(join(__dirname, 'master-yarn-database.json'), 'utf8'))
 
 function toColorFamily(value = '', colorName = '') {
   const combined = `${value} ${colorName}`.toLowerCase()
