@@ -175,6 +175,7 @@ const projectStatuses: ProjectStatus[] = [
 const expenseCategories: ExpenseCategory[] = ['Yarn', 'Glue', 'Backing', 'Tools', 'Shipping', 'Booth/Event Fee', 'Other']
 const colorFamilies: ColorFamily[] = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Black', 'White', 'Gray', 'Neon', 'Multi']
 const starterYarnBrandNames = ['I Love This Yarn', 'Red Heart Super Saver', 'Caron One Pound', 'Loops & Threads', 'Big Twist', 'Mainstays', 'Lion Brand', 'Premier Yarns', 'Bernat']
+const yarnPackageOptions = ['Skein', 'Cake', 'Cone', 'Ball', 'Hank', 'Donut', 'Tube', 'Spool']
 
 const sampleProjects: Project[] = [
   { id: 'p1', name: 'Galaxy Logo Rug', customer: 'Maya Chen', size: '3 ft x 4 ft', status: 'Tufting', price: 420, depositPaid: 150, dueDate: '2026-05-24', notes: 'Match brand colors closely.', photos: [] },
@@ -1742,6 +1743,24 @@ function YarnLibraryPage({
     inStockQuantity: 0,
     reorderLevel: 0,
     notes: '',
+    materialBlend: '',
+    skeinSize: '',
+    yarnForm: 'Skein',
+    packageShape: 'Skein',
+    centerPull: '',
+    coneWeight: '',
+    coreType: '',
+    plies: '',
+    texture: '',
+    finish: '',
+    glowUV: '',
+    neon: '',
+    tuftingRecommended: '',
+    projectUsage: '',
+    dyeLot: '',
+    storageLocation: '',
+    appCategory: 'Yarn Inventory',
+    lastUpdated: '',
   })
 
   const visibleBrands = brands.filter((brand) => brandFilter === 'All' || brand.name === brandFilter)
@@ -1806,7 +1825,41 @@ function YarnLibraryPage({
         brand.id === brandId ? { ...brand, colors: [...brand.colors, { id: crypto.randomUUID(), ...colorForm }] } : brand,
       ),
     )
-    setColorForm({ name: '', line: '', sku: '', upc: '', family: 'Multi', hexColor: '#ffffff', weight: '', yardage: '', fiber: '', store: '', website: '', photo: '', inStockQuantity: 0, reorderLevel: 0, notes: '' })
+    setColorForm({
+      name: '',
+      line: '',
+      sku: '',
+      upc: '',
+      family: 'Multi',
+      hexColor: '#ffffff',
+      weight: '',
+      yardage: '',
+      fiber: '',
+      store: '',
+      website: '',
+      photo: '',
+      inStockQuantity: 0,
+      reorderLevel: 0,
+      notes: '',
+      materialBlend: '',
+      skeinSize: '',
+      yarnForm: 'Skein',
+      packageShape: 'Skein',
+      centerPull: '',
+      coneWeight: '',
+      coreType: '',
+      plies: '',
+      texture: '',
+      finish: '',
+      glowUV: '',
+      neon: '',
+      tuftingRecommended: '',
+      projectUsage: '',
+      dyeLot: '',
+      storageLocation: '',
+      appCategory: 'Yarn Inventory',
+      lastUpdated: '',
+    })
     setActiveColorBrandId(null)
     onNotify('Yarn color saved.')
   }
@@ -1957,6 +2010,18 @@ function YarnLibraryPage({
                     <Field label="Weight/category"><input value={colorForm.weight} onChange={(event) => setColorForm({ ...colorForm, weight: event.target.value })} /></Field>
                     <Field label="Yardage"><input value={colorForm.yardage} onChange={(event) => setColorForm({ ...colorForm, yardage: event.target.value })} /></Field>
                     <Field label="Fiber content"><input value={colorForm.fiber} onChange={(event) => setColorForm({ ...colorForm, fiber: event.target.value })} /></Field>
+                    <Field label="Yarn form">
+                      <select value={colorForm.yarnForm || ''} onChange={(event) => setColorForm({ ...colorForm, yarnForm: event.target.value })}>
+                        <option value="">Select form</option>
+                        {yarnPackageOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Package shape">
+                      <select value={colorForm.packageShape || ''} onChange={(event) => setColorForm({ ...colorForm, packageShape: event.target.value })}>
+                        <option value="">Select shape</option>
+                        {yarnPackageOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </Field>
                     <Field label="Store/source"><input value={colorForm.store} onChange={(event) => setColorForm({ ...colorForm, store: event.target.value })} /></Field>
                     <Field label="Website"><input value={colorForm.website} onChange={(event) => setColorForm({ ...colorForm, website: event.target.value })} /></Field>
                     <Field label="Reorder level"><NumberInput value={colorForm.reorderLevel} onChange={(value) => setColorForm({ ...colorForm, reorderLevel: value })} /></Field>
