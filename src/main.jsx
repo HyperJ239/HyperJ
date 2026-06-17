@@ -25,6 +25,7 @@ const STORAGE_KEY = 'tufttrack-yarn-data-v1';
 const AUTH_KEY = 'tufttrack-yarn-auth-v1';
 const DEFAULT_USERNAME = 'admin';
 const DEFAULT_PASSWORD = 'tufttrack123';
+const LOGO_SRC = `${import.meta.env.BASE_URL}tufttrack-logo.png`;
 
 const BRANDS = [
   'I Love This Yarn',
@@ -88,7 +89,7 @@ function App() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
     } else if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations?.().then((registrations) => {
         registrations.forEach((registration) => registration.unregister());
@@ -232,7 +233,7 @@ function App() {
         <header className="mb-5 flex items-center justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <img
-              src="/tufttrack-logo.png"
+              src={LOGO_SRC}
               alt="TuftTrack logo"
               className="h-16 w-16 shrink-0 rounded-lg border border-teal-300/25 object-cover shadow-neon"
             />
@@ -277,7 +278,7 @@ function LoginScreen({ onLogin }) {
       <section className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <img
-            src="/tufttrack-logo.png"
+            src={LOGO_SRC}
             alt="TuftTrack logo"
             className="mx-auto mb-4 h-32 w-32 rounded-lg border border-teal-300/30 object-cover shadow-neon"
           />
