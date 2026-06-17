@@ -1,0 +1,18 @@
+{
+  "name": "TuftTrack Yarn",
+  "short_name": "TuftTrack",
+  "description": "Track yarn inventory on your phone.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07141f",
+  "theme_color": "#07141f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/tufttrack-logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
